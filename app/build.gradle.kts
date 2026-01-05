@@ -43,15 +43,8 @@ android {
     }
   }
 
-  signingConfigs {
-    create("release") {
-      // keys removed for public push
-    }
-  }
-
   buildTypes {
     named("release") {
-      signingConfig = signingConfigs.getByName("release")
       isMinifyEnabled = true
       isShrinkResources = true
       proguardFiles(
@@ -198,7 +191,7 @@ dependencies {
   implementation(libs.nanohttpd)
   implementation(libs.lazycolumnscrollbar)
   implementation(libs.reorderable)
-  implementation(libs.jsoup) // HTML parsing for subtitle search
+
   implementation(libs.coil.core)
   implementation(libs.coil.compose)
 }
