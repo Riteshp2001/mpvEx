@@ -17,4 +17,6 @@ data class PlaybackStateEntity(
   val audioDelay: Int,
   val timeRemaining: Int = 0, // in seconds (duration - lastPosition)
   val externalSubtitles: String = "", // Comma-separated list of external subtitle URIs
+  val filterPreset: String = "NONE", // Selected filter preset name for this video
 )
+

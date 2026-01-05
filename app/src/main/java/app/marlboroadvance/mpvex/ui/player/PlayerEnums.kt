@@ -82,6 +82,7 @@ enum class Sheets {
   VideoZoom,
   AspectRatios,
   FrameNavigation,
+  MoreVideos,
 }
 
 enum class Panels {
@@ -90,6 +91,7 @@ enum class Panels {
   SubtitleDelay,
   AudioDelay,
   VideoFilters,
+  Playlist, // Added for Left Side Drawer
 }
 
 sealed class PlayerUpdates {
@@ -154,6 +156,57 @@ enum class VideoFilters(
     { it.hueFilter },
     "hue",
   ),
+}
+
+/**
+ * Predefined video filter presets with optimized color grading values.
+ * Each preset enhances video content in different ways:
+ * - Values are in range -100 to 100 for MPV compatibility
+ * - Carefully tuned for various viewing scenarios and art styles
+ */
+enum class FilterPreset(
+  @StringRes val titleRes: Int,
+  val brightness: Int,
+  val contrast: Int,
+  val saturation: Int,
+  val gamma: Int,
+  val hue: Int,
+) {
+  /** No filter applied - original colors */
+  NONE(R.string.filter_preset_none, 0, 0, 0, 0, 0),
+  
+  /** Enhanced vivid colors - boosts saturation and contrast for punchy visuals */
+  VIVID(R.string.filter_preset_vivid, 2, 12, 18, 0, 0),
+  
+  /** Warm tone - adds golden warmth, great for slice-of-life and romance */
+  WARM_TONE(R.string.filter_preset_warm_tone, 3, 5, 8, 5, 8),
+  
+  /** Cool tone - blue-shifted for sci-fi, mecha, and mystery */
+  COOL_TONE(R.string.filter_preset_cool_tone, 0, 8, 5, 0, -12),
+  
+  /** Soft pastel - reduced saturation with lifted shadows for gentle aesthetics */
+  SOFT_PASTEL(R.string.filter_preset_soft_pastel, 8, -8, -15, 8, 0),
+  
+  /** Cinematic - film-like with crushed blacks and warm highlights */
+  CINEMATIC(R.string.filter_preset_cinematic, -3, 18, 5, -5, 3),
+  
+  /** Dramatic - high contrast for action and battle sequences */
+  DRAMATIC(R.string.filter_preset_dramatic, -5, 25, 15, -8, 0),
+  
+  /** Night mode - reduced brightness and blue light for comfortable dark viewing */
+  NIGHT_MODE(R.string.filter_preset_night_mode, -12, -5, -10, 10, 5),
+  
+  /** Nostalgic - faded retro look reminiscent of classic content */
+  NOSTALGIC(R.string.filter_preset_nostalgic, 0, -5, -8, 12, 5),
+  
+  /** Ghibli style - natural, earthy tones with soft warmth */
+  GHIBLI_STYLE(R.string.filter_preset_ghibli_style, 5, 3, 10, 5, 6),
+  
+  /** Neon pop - hyper-saturated for vibrant scenes */
+  NEON_POP(R.string.filter_preset_neon_pop, 5, 15, 30, -3, 0),
+  
+  /** Deep black - enhanced blacks with high contrast for OLED displays */
+  DEEP_BLACK(R.string.filter_preset_deep_black, -8, 20, 8, -10, 0),
 }
 
 enum class DebandSettings(

@@ -183,6 +183,10 @@ class PlayerViewModel(
   private val _videoZoom = MutableStateFlow(0f)
   val videoZoom: StateFlow<Float> = _videoZoom.asStateFlow()
 
+  // Filter preset for per-video persistence
+  private val _currentFilterPreset = MutableStateFlow("NONE")
+  val currentFilterPreset: StateFlow<String> = _currentFilterPreset.asStateFlow()
+
   // Timer
   private var timerJob: Job? = null
   private val _remainingTime = MutableStateFlow(0)
@@ -202,6 +206,13 @@ class PlayerViewModel(
 
   private val _shuffleEnabled = MutableStateFlow(false)
   val shuffleEnabled: StateFlow<Boolean> = _shuffleEnabled.asStateFlow()
+
+  // More Videos playlist state
+  private val _playlistVideos = MutableStateFlow<List<app.marlboroadvance.mpvex.ui.player.controls.components.sheets.VideoItem>>(emptyList())
+  val playlistVideos: StateFlow<List<app.marlboroadvance.mpvex.ui.player.controls.components.sheets.VideoItem>> = _playlistVideos.asStateFlow()
+
+  private val _currentPlaylistIndex = MutableStateFlow(0)
+  val currentPlaylistIndex: StateFlow<Int> = _currentPlaylistIndex.asStateFlow()
 
   init {
     // Track selection is now handled by TrackSelector in PlayerActivity
@@ -939,6 +950,12 @@ class PlayerViewModel(
     setVideoZoom(0f)
   }
 
+  // ==================== Filter Preset ====================
+
+  fun setFilterPreset(presetName: String) {
+    _currentFilterPreset.value = presetName
+  }
+
   // ==================== Frame Navigation ====================
 
   fun updateFrameInfo() {
@@ -1233,6 +1250,49 @@ class PlayerViewModel(
 
   private fun showToast(message: String) {
     Toast.makeText(host.context, message, Toast.LENGTH_SHORT).show()
+  }
+
+  // ==================== More Videos ====================
+
+  /**
+   * Updates the playlist videos list and current index for the More Videos sheet.
+   * Call this when the activity playlist is loaded or updated.
+   */
+  fun updatePlaylistVideos(playlist: List<android.net.Uri>, currentIndex: Int) {
+    _currentPlaylistIndex.value = currentIndex
+    _playlistVideos.value = playlist.mapIndexed { index, uri ->
+      val filename = uri.lastPathSegment?.substringAfterLast("/") 
+        ?: uri.toString().substringAfterLast("/")
+      app.marlboroadvance.mpvex.ui.player.controls.components.sheets.VideoItem(
+        uri = uri,
+        title = filename,
+        index = index,
+      )
+    }
+  }
+
+  /**
+   * Updates just the current playlist index (e.g., when switching videos within the playlist).
+   */
+  fun updateCurrentPlaylistIndex(index: Int) {
+    _currentPlaylistIndex.value = index
+  }
+
+  /**
+   * Returns true if there are more videos available to show.
+   */
+  fun hasMoreVideos(): Boolean {
+    return _playlistVideos.value.size > 1
+  }
+
+  /**
+   * Play a video at the specified playlist index.
+   */
+  fun playVideoAtIndex(index: Int) {
+    val activity = host as? PlayerActivity ?: return
+    if (index in activity.playlist.indices) {
+      activity.playFromPlaylist(index)
+    }
   }
 
 }

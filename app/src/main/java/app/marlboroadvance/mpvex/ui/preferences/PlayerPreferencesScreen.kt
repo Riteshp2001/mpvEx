@@ -313,6 +313,21 @@ object PlayerPreferencesScreen : Screen {
                 onValueChange = preferences.showLoadingCircle::set,
                 title = { Text(stringResource(R.string.pref_player_controls_show_loading_circle)) },
               )
+              
+              PreferenceDivider()
+              
+              val pipModeOnBackPress by preferences.pipModeOnBackPress.collectAsState()
+              SwitchPreference(
+                value = pipModeOnBackPress,
+                onValueChange = preferences.pipModeOnBackPress::set,
+                title = { Text(text = "PiP on back press") },
+                summary = { 
+                  Text(
+                    text = "Enter Picture-in-Picture mode when pressing back button",
+                    color = MaterialTheme.colorScheme.outline,
+                  )
+                },
+              )
             }
           }
           // Display Section

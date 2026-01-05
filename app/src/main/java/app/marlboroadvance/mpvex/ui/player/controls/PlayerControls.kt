@@ -24,9 +24,14 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -848,6 +853,28 @@ fun PlayerControls(
           )
         }
 
+        // Left Edge Gesture for Playlist Panel
+        if (!areControlsLocked) {
+          Box(
+            modifier = Modifier
+              .fillMaxHeight()
+              .width(24.dp)
+              .constrainAs(createRef()) {
+                start.linkTo(parent.start)
+                top.linkTo(parent.top)
+                bottom.linkTo(parent.bottom)
+              }
+              .pointerInput(Unit) {
+                detectHorizontalDragGestures { change, dragAmount ->
+                  if (dragAmount > 10) {
+                   onOpenPanel(Panels.Playlist)
+                   change.consume()
+                  }
+                }
+              }
+          )
+        }
+
         AnimatedVisibility(
           visible = controlsShown && !areControlsLocked,
           enter =
@@ -1151,6 +1178,7 @@ fun PlayerControls(
     PlayerPanels(
       panelShown = panel,
       onDismissRequest = { onOpenPanel(Panels.None) },
+      viewModel = viewModel,
     )
   }
 }

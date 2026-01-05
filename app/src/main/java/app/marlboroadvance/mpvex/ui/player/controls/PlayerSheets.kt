@@ -16,6 +16,7 @@ import app.marlboroadvance.mpvex.ui.player.controls.components.sheets.ChaptersSh
 import app.marlboroadvance.mpvex.ui.player.controls.components.sheets.DecodersSheet
 import app.marlboroadvance.mpvex.ui.player.controls.components.sheets.FrameNavigationSheet
 import app.marlboroadvance.mpvex.ui.player.controls.components.sheets.MoreSheet
+import app.marlboroadvance.mpvex.ui.player.controls.components.sheets.MoreVideosSheet
 import app.marlboroadvance.mpvex.ui.player.controls.components.sheets.PlaybackSpeedSheet
 import app.marlboroadvance.mpvex.ui.player.controls.components.sheets.SubtitlesSheet
 import app.marlboroadvance.mpvex.ui.player.controls.components.sheets.SubtitleSearchSheet
@@ -232,6 +233,17 @@ fun PlayerSheets(
         onUnpause = viewModel::unpause,
         onPauseUnpause = viewModel::pauseUnpause,
         onSeekTo = { position, _ -> viewModel.seekTo(position) },
+        onDismissRequest = onDismissRequest,
+      )
+    }
+    
+    Sheets.MoreVideos -> {
+      val playlistVideos by viewModel.playlistVideos.composeCollectAsState()
+      val currentPlaylistIndex by viewModel.currentPlaylistIndex.composeCollectAsState()
+      MoreVideosSheet(
+        videos = playlistVideos,
+        currentIndex = currentPlaylistIndex,
+        onSelectVideo = { index -> viewModel.playVideoAtIndex(index) },
         onDismissRequest = onDismissRequest,
       )
     }

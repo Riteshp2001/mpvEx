@@ -13,6 +13,7 @@ import app.marlboroadvance.mpvex.preferences.SettingsManager
 import app.marlboroadvance.mpvex.preferences.SubtitlesPreferences
 import app.marlboroadvance.mpvex.preferences.preference.AndroidPreferenceStore
 import app.marlboroadvance.mpvex.preferences.preference.PreferenceStore
+import app.marlboroadvance.mpvex.utils.ai.AiFilenameService
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
@@ -32,4 +33,6 @@ val PreferencesModule =
     singleOf(::BrowserPreferences)
     singleOf(::FoldersPreferences)
     singleOf(::SettingsManager)
+    singleOf(::AiFilenameService)
   }
+

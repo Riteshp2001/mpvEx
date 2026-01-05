@@ -380,7 +380,11 @@ class PlayerActivity :
     if (playlist.isEmpty() && playlistId == null && playerPreferences.playlistMode.get()) {
       val path = parsePathFromIntent(intent)
       if (path != null) {
-        generatePlaylistFromFolder(path)
+        if (path.startsWith("content://")) {
+          generatePlaylistFromContentUri(Uri.parse(path))
+        } else {
+          generatePlaylistFromFolder(path)
+        }
       }
     }
 
@@ -399,6 +403,11 @@ class PlayerActivity :
 
     // Apply persisted shuffle state after playlist is loaded
     viewModel.applyPersistedShuffleState()
+    
+    // Update ViewModel with playlist data for More Videos sheet
+    if (playlist.isNotEmpty()) {
+      viewModel.updatePlaylistVideos(playlist, playlistIndex)
+    }
 
     window.attributes.layoutInDisplayCutoutMode =
       WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
@@ -454,6 +463,12 @@ class PlayerActivity :
 
     if (!viewModel.controlsShown.value) {
       viewModel.showControls()
+      return
+    }
+
+    // Check if PiP on back press is enabled and video is playing
+    if (playerPreferences.pipModeOnBackPress.get() && isReady) {
+      pipHelper.enterPipMode()
       return
     }
 
@@ -1792,6 +1807,7 @@ class PlayerActivity :
               ).toInt(),
             timeRemaining = timeRemaining,
             externalSubtitles = viewModel.externalSubtitles.joinToString("|"),
+            filterPreset = viewModel.currentFilterPreset.value,
           ),
         )
       }.onFailure { e ->
@@ -1897,6 +1913,19 @@ class PlayerActivity :
     // Restore video zoom from saved state
     MPVLib.setPropertyDouble("video-zoom", state.videoZoom.toDouble())
     viewModel.setVideoZoom(state.videoZoom)
+
+    // Restore filter preset from saved state
+    if (state.filterPreset.isNotBlank() && state.filterPreset != "NONE") {
+      viewModel.setFilterPreset(state.filterPreset)
+      // Apply the preset values to MPV
+      FilterPreset.entries.find { it.name == state.filterPreset }?.let { preset ->
+        MPVLib.setPropertyInt("brightness", preset.brightness)
+        MPVLib.setPropertyInt("contrast", preset.contrast)
+        MPVLib.setPropertyInt("saturation", preset.saturation)
+        MPVLib.setPropertyInt("gamma", preset.gamma)
+        MPVLib.setPropertyInt("hue", preset.hue)
+      }
+    }
 
     if (playerPreferences.savePositionOnQuit.get() && state.lastPosition != 0) {
       MPVLib.setPropertyInt("time-pos", state.lastPosition)
@@ -2637,6 +2666,22 @@ class PlayerActivity :
   }
 
   /**
+   * Play a specific video from the playlist by index.
+   * Used by the More Videos sheet to jump to any video in the playlist.
+   */
+  fun playFromPlaylist(index: Int) {
+    if (playlist.isEmpty() || index !in playlist.indices) return
+    
+    // Update shuffle position if shuffle is enabled
+    if (viewModel.shuffleEnabled.value && shuffledIndices.isNotEmpty()) {
+      shuffledPosition = shuffledIndices.indexOf(index).takeIf { it >= 0 } ?: 0
+    }
+    
+    playlistIndex = index
+    loadPlaylistItem(index)
+  }
+
+  /**
    * Load a playlist item by index
    */
   private fun loadPlaylistItem(index: Int) {
@@ -2710,6 +2755,7 @@ class PlayerActivity :
 
     // Update playlist index
     playlistIndex = index
+    viewModel.updateCurrentPlaylistIndex(index)
 
     // Extract and set the new file name
     fileName = getFileNameFromUri(uri)
@@ -2946,11 +2992,90 @@ class PlayerActivity :
           withContext(Dispatchers.Main) {
             playlist = newPlaylist
             playlistIndex = newIndex
+            // Update ViewModel
+            viewModel.updatePlaylistVideos(playlist, playlistIndex)
             Log.d(TAG, "Auto-playlist generated: ${playlist.size} videos")
           }
         }
       }.onFailure { e ->
         Log.e(TAG, "Failed to auto-generate playlist", e)
+      }
+    }
+  }
+
+  private fun generatePlaylistFromContentUri(uri: Uri) {
+    lifecycleScope.launch(Dispatchers.IO) {
+      runCatching {
+        val projection = arrayOf(
+          MediaStore.Video.Media._ID,
+          MediaStore.Video.Media.DISPLAY_NAME,
+          MediaStore.Video.Media.BUCKET_ID,
+          MediaStore.Video.Media.DATA
+        )
+
+        // First, get the bucket ID of the current video
+        var bucketId: String? = null
+        var currentVideoPath: String? = null
+        
+        contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
+          if (cursor.moveToFirst()) {
+            val bucketIdIndex = cursor.getColumnIndex(MediaStore.Video.Media.BUCKET_ID)
+            val dataIndex = cursor.getColumnIndex(MediaStore.Video.Media.DATA)
+            
+            if (bucketIdIndex != -1) bucketId = cursor.getString(bucketIdIndex)
+            if (dataIndex != -1) currentVideoPath = cursor.getString(dataIndex)
+          }
+        }
+
+        if (bucketId == null) return@runCatching
+
+        // Query all videos with the same bucket ID
+        val selection = "${MediaStore.Video.Media.BUCKET_ID} = ?"
+        val selectionArgs = arrayOf(bucketId)
+        val sortOrder = "${MediaStore.Video.Media.DISPLAY_NAME} ASC"
+
+        val newPlaylist = mutableListOf<Uri>()
+        var newIndex = 0
+
+        contentResolver.query(
+          MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+          projection,
+          selection,
+          selectionArgs,
+          sortOrder
+        )?.use { cursor ->
+          val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media._ID)
+          val dataColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATA)
+          
+          while (cursor.moveToNext()) {
+            val id = cursor.getLong(idColumn)
+            val path = cursor.getString(dataColumn)
+            val contentUri = android.content.ContentUris.withAppendedId(
+              MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+              id
+            )
+            
+            newPlaylist.add(contentUri)
+            
+            // Try to match current video either by URI (if possible) or path
+            if (contentUri == uri || (currentVideoPath != null && path == currentVideoPath)) {
+               newIndex = newPlaylist.size - 1
+            }
+          }
+        }
+
+        if (newPlaylist.size <= 1) return@runCatching
+
+        withContext(Dispatchers.Main) {
+          playlist = newPlaylist
+          playlistIndex = newIndex
+          // Update ViewModel
+          viewModel.updatePlaylistVideos(playlist, playlistIndex)
+          Log.d(TAG, "Auto-playlist generated (from MediaStore): ${playlist.size} videos")
+        }
+
+      }.onFailure { e ->
+        Log.e(TAG, "Failed to auto-generate playlist from MediaStore", e)
       }
     }
   }

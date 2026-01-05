@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import app.marlboroadvance.mpvex.ui.player.Panels
+import app.marlboroadvance.mpvex.ui.player.PlayerViewModel
 import app.marlboroadvance.mpvex.ui.player.controls.components.panels.AudioDelayPanel
 import app.marlboroadvance.mpvex.ui.player.controls.components.panels.SubtitleDelayPanel
 import app.marlboroadvance.mpvex.ui.player.controls.components.panels.SubtitleSettingsPanel
@@ -25,6 +26,7 @@ import app.marlboroadvance.mpvex.ui.player.controls.components.panels.VideoSetti
 fun PlayerPanels(
   panelShown: Panels,
   onDismissRequest: () -> Unit,
+  viewModel: PlayerViewModel,
   modifier: Modifier = Modifier,
 ) {
   AnimatedContent(
@@ -33,6 +35,7 @@ fun PlayerPanels(
     contentAlignment = Alignment.CenterEnd,
     contentKey = { it.name },
     transitionSpec = {
+      // Default Right side slide animation
       fadeIn() + slideInHorizontally { it / 3 } togetherWith fadeOut() + slideOutHorizontally { it / 2 }
     },
     modifier = modifier,
@@ -51,7 +54,13 @@ fun PlayerPanels(
         AudioDelayPanel(onDismissRequest)
       }
       Panels.VideoFilters -> {
-        VideoSettingsPanel(onDismissRequest)
+        VideoSettingsPanel(onDismissRequest, viewModel)
+      }
+      Panels.Playlist -> {
+        app.marlboroadvance.mpvex.ui.player.controls.components.panels.PlaylistPanel(
+          onDismissRequest = onDismissRequest,
+          viewModel = viewModel
+        )
       }
     }
   }

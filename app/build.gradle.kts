@@ -43,8 +43,15 @@ android {
     }
   }
 
+  signingConfigs {
+    create("release") {
+      // keys removed for public push
+    }
+  }
+
   buildTypes {
     named("release") {
+      signingConfig = signingConfigs.getByName("release")
       isMinifyEnabled = true
       isShrinkResources = true
       proguardFiles(

@@ -11,11 +11,15 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import app.marlboroadvance.mpvex.R
+import app.marlboroadvance.mpvex.ui.player.FilterPreset
+import app.marlboroadvance.mpvex.ui.player.PlayerViewModel
 import app.marlboroadvance.mpvex.ui.player.controls.CARDS_MAX_WIDTH
 import app.marlboroadvance.mpvex.ui.player.controls.panelCardsColors
 import app.marlboroadvance.mpvex.ui.theme.spacing
@@ -23,8 +27,11 @@ import app.marlboroadvance.mpvex.ui.theme.spacing
 @Composable
 fun VideoSettingsPanel(
   onDismissRequest: () -> Unit,
+  viewModel: PlayerViewModel,
   modifier: Modifier = Modifier,
 ) {
+  val currentFilterPreset by viewModel.currentFilterPreset.collectAsState()
+  
   ConstraintLayout(
     modifier =
       modifier
@@ -66,8 +73,12 @@ fun VideoSettingsPanel(
           stringResource(R.string.player_sheets_video_settings_title),
           style = MaterialTheme.typography.titleLarge,
         )
-        VideoSettingsDebandCard()
+        VideoSettingsFilterPresetsCard(
+          currentPreset = FilterPreset.entries.find { it.name == currentFilterPreset } ?: FilterPreset.NONE,
+          onPresetChange = { preset -> viewModel.setFilterPreset(preset.name) },
+        )
         VideoSettingsFiltersCard()
+        VideoSettingsDebandCard()
       }
     }
   }

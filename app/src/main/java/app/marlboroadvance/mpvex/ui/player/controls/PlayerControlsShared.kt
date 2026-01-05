@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.PictureInPictureAlt
 import androidx.compose.material.icons.filled.ScreenRotation
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Subtitles
+import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material.icons.filled.ZoomIn
 import androidx.compose.material.icons.filled.ZoomOutMap
 import androidx.compose.material.icons.filled.Repeat
@@ -500,6 +501,15 @@ fun RenderPlayerButton(
         Icons.Default.MoreVert,
         onClick = { onOpenSheet(Sheets.More) },
         onLongClick = { onOpenPanel(Panels.VideoFilters) },
+        color = if (hideBackground) controlColor else MaterialTheme.colorScheme.onSurface,
+        modifier = Modifier.size(buttonSize),
+      )
+    }
+
+    PlayerButton.MORE_VIDEOS -> {
+      ControlsButton(
+        Icons.Default.VideoLibrary, // Ensure this icon is available or use a suitable default
+        onClick = { onOpenPanel(Panels.Playlist) },
         color = if (hideBackground) controlColor else MaterialTheme.colorScheme.onSurface,
         modifier = Modifier.size(buttonSize),
       )

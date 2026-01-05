@@ -606,6 +606,7 @@ private fun VideoListContent(
                 gridColumns = videoGridColumns,
                 showSubtitleIndicator = showSubtitleIndicator,
                 allowThumbnailGeneration = false,
+                hasExternalSubtitles = videoWithInfo.hasExternalSubtitle,
               )
             }
             }
@@ -647,6 +648,7 @@ private fun VideoListContent(
                   isGridMode = false,
                   showSubtitleIndicator = showSubtitleIndicator,
                   allowThumbnailGeneration = false,
+                  hasExternalSubtitles = videoWithInfo.hasExternalSubtitle,
                 )
               }
             }

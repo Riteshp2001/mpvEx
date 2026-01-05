@@ -14,6 +14,7 @@ import androidx.compose.material.icons.outlined.ScreenRotation
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.Subtitles
 import androidx.compose.material.icons.outlined.Title
+import androidx.compose.material.icons.outlined.VideoLibrary
 // import androidx.compose.material.icons.outlined.VideoLabel // No longer needed
 import androidx.compose.material.icons.outlined.ZoomIn
 import androidx.compose.material.icons.outlined.Repeat
@@ -42,7 +43,8 @@ enum class PlayerButton(
   AUDIO_TRACK(Icons.Outlined.Audiotrack),
   SUBTITLES(Icons.Outlined.Subtitles),
   MORE_OPTIONS(Icons.Outlined.MoreVert),
-  CURRENT_CHAPTER(Icons.Outlined.Bookmarks), // <-- CHANGED ICON
+  MORE_VIDEOS(Icons.Outlined.VideoLibrary),
+  CURRENT_CHAPTER(Icons.Outlined.Bookmarks),
   REPEAT_MODE(Icons.Outlined.Repeat),
   SHUFFLE(Icons.Outlined.Shuffle),
   NONE(Icons.Outlined.Bookmarks), // 'NONE' is filtered out, icon is irrelevant
@@ -80,6 +82,7 @@ fun getPlayerButtonLabel(button: PlayerButton): String =
     PlayerButton.AUDIO_TRACK -> "Audio Track" // stringResource(R.string.btn_label_audio)
     PlayerButton.SUBTITLES -> "Subtitles" // stringResource(R.string.btn_label_subtitles)
     PlayerButton.MORE_OPTIONS -> "More Options" // stringResource(R.string.btn_label_more)
+    PlayerButton.MORE_VIDEOS -> "More Videos" // Added label
     PlayerButton.CURRENT_CHAPTER -> "Current Chapter" // stringResource(R.string.btn_label_chapter)
     PlayerButton.REPEAT_MODE -> "Repeat Mode" // stringResource(R.string.btn_label_repeat_mode)
     PlayerButton.SHUFFLE -> "Shuffle" // stringResource(R.string.btn_label_shuffle)

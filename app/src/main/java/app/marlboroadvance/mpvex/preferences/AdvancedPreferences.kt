@@ -19,4 +19,16 @@ class AdvancedPreferences(
   val enableLuaScripts = preferenceStore.getBoolean("enable_lua_scripts", false)
   val selectedLuaScripts = preferenceStore.getStringSet("selected_lua_scripts", emptySet())
 
+  // AI Integration settings
+  val aiEnabled = preferenceStore.getBoolean("ai_enabled", false)
+  val aiProvider = preferenceStore.getString("ai_provider", "gemini") // "gemini", "openai", "custom"
+  val geminiApiKey = preferenceStore.getString("gemini_api_key")
+  val geminiModel = preferenceStore.getString("gemini_model", "gemini-2.0-flash")
+  val openAiApiKey = preferenceStore.getString("openai_api_key")
+  val openAiModel = preferenceStore.getString("openai_model", "gpt-4o-mini")
+  val customAiEndpoint = preferenceStore.getString("custom_ai_endpoint")
+  val customAiApiKey = preferenceStore.getString("custom_ai_api_key")
+  val customAiModel = preferenceStore.getString("custom_ai_model")
+  val autoCleanFilename = preferenceStore.getBoolean("auto_clean_filename", false)
+
 }

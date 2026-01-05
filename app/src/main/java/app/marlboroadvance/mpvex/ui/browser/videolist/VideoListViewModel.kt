@@ -25,6 +25,7 @@ data class VideoWithPlaybackInfo(
   val timeRemaining: Long? = null, // in seconds
   val progressPercentage: Float? = null, // 0.0 to 1.0
   val isOldAndUnplayed: Boolean = false, // true if video is older than threshold and never played
+  val hasExternalSubtitle: Boolean = false,
 )
 
 class VideoListViewModel(
@@ -151,11 +152,26 @@ class VideoListViewModel(
         // Video is unplayed if there's no playback state record
         val isOldAndUnplayed = playbackState == null
 
+        // Check for external subtitle
+        val hasExternalSubtitle = runCatching {
+            val videoFile = java.io.File(video.path)
+            val parentDir = videoFile.parentFile
+            val baseName = videoFile.nameWithoutExtension
+            
+            // Common subtitle extensions
+            val subtitleExtensions = listOf("srt", "vtt", "ass", "ssa", "sub")
+            
+            subtitleExtensions.any { ext ->
+                java.io.File(parentDir, "$baseName.$ext").exists()
+            }
+        }.getOrElse { false }
+
         VideoWithPlaybackInfo(
           video = video,
           timeRemaining = playbackState?.timeRemaining?.toLong(),
           progressPercentage = progress,
           isOldAndUnplayed = isOldAndUnplayed,
+          hasExternalSubtitle = hasExternalSubtitle,
         )
       }
     _videosWithPlaybackInfo.value = videosWithInfo

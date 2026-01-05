@@ -7,13 +7,16 @@ import android.widget.Toast
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
@@ -685,6 +688,459 @@ object AdvancedPreferencesScreen : Screen {
                   }
                 },
               )
+            }
+          }
+          
+          // AI Integration Section
+          item {
+            PreferenceSectionHeader(title = "AI Integration")
+          }
+          
+          item {
+            PreferenceCard {
+              val aiEnabled by preferences.aiEnabled.collectAsState()
+              val aiProvider by preferences.aiProvider.collectAsState()
+              val geminiApiKey by preferences.geminiApiKey.collectAsState()
+              val geminiModel by preferences.geminiModel.collectAsState()
+              val openAiApiKey by preferences.openAiApiKey.collectAsState()
+              val openAiModel by preferences.openAiModel.collectAsState()
+              val customEndpoint by preferences.customAiEndpoint.collectAsState()
+              val customApiKey by preferences.customAiApiKey.collectAsState()
+              val customModel by preferences.customAiModel.collectAsState()
+              val autoClean by preferences.autoCleanFilename.collectAsState()
+              
+              var showApiKeyDialog by remember { mutableStateOf(false) }
+              var showModelDialog by remember { mutableStateOf(false) }
+              var showEndpointDialog by remember { mutableStateOf(false) }
+              var showProviderDialog by remember { mutableStateOf(false) }
+              
+              SwitchPreference(
+                value = aiEnabled,
+                onValueChange = preferences.aiEnabled::set,
+                title = { Text("Enable AI") },
+                summary = { 
+                  Text(
+                    "Use AI to clean up messy filenames for subtitle search",
+                    color = MaterialTheme.colorScheme.outline,
+                  ) 
+                },
+              )
+              
+              if (aiEnabled) {
+                PreferenceDivider()
+                
+                // Provider selection
+                Preference(
+                  title = { Text("AI Provider") },
+                  summary = { 
+                    val providerName = when (aiProvider) {
+                      "gemini" -> "Google Gemini"
+                      "openai" -> "OpenAI / Compatible"
+                      "custom" -> "Custom Endpoint"
+                      else -> "Google Gemini"
+                    }
+                    Text(providerName, color = MaterialTheme.colorScheme.outline) 
+                  },
+                  onClick = { showProviderDialog = true },
+                )
+                
+                if (showProviderDialog) {
+                  AlertDialog(
+                    onDismissRequest = { showProviderDialog = false },
+                    title = { Text("Select AI Provider") },
+                    text = {
+                      Column {
+                        listOf(
+                          "gemini" to "Google Gemini",
+                          "openai" to "OpenAI / Compatible",
+                          "custom" to "Custom Endpoint"
+                        ).forEach { (id, name) ->
+                          Row(
+                            modifier = Modifier
+                              .fillMaxWidth()
+                              .clickable {
+                                preferences.aiProvider.set(id)
+                                showProviderDialog = false
+                              }
+                              .padding(vertical = 12.dp),
+                            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                          ) {
+                            androidx.compose.material3.RadioButton(
+                              selected = aiProvider == id,
+                              onClick = {
+                                preferences.aiProvider.set(id)
+                                showProviderDialog = false
+                              }
+                            )
+                            Text(name, modifier = Modifier.padding(start = 8.dp))
+                          }
+                        }
+                      }
+                    },
+                    confirmButton = {
+                      TextButton(onClick = { showProviderDialog = false }) {
+                        Text("Cancel")
+                      }
+                    },
+                  )
+                }
+                
+                PreferenceDivider()
+                
+                // API Key configuration based on provider
+                when (aiProvider) {
+                  "gemini" -> {
+                    Preference(
+                      title = { Text("Gemini API Key") },
+                      summary = { 
+                        Text(
+                          if (geminiApiKey.isNotBlank()) "••••••••${geminiApiKey.takeLast(4)}" else "Not configured",
+                          color = MaterialTheme.colorScheme.outline,
+                        ) 
+                      },
+                      onClick = { showApiKeyDialog = true },
+                    )
+                    
+                    if (showApiKeyDialog) {
+                      var apiKeyInput by remember { mutableStateOf(geminiApiKey) }
+                      AlertDialog(
+                        onDismissRequest = { showApiKeyDialog = false },
+                        title = { Text("Gemini API Key") },
+                        text = {
+                          Column {
+                            Text(
+                              "Get your API key from Google AI Studio",
+                              style = MaterialTheme.typography.bodySmall,
+                              color = MaterialTheme.colorScheme.outline,
+                            )
+                            androidx.compose.material3.OutlinedTextField(
+                              value = apiKeyInput,
+                              onValueChange = { apiKeyInput = it },
+                              label = { Text("API Key") },
+                              singleLine = true,
+                              modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                            )
+                          }
+                        },
+                        confirmButton = {
+                          TextButton(onClick = {
+                            preferences.geminiApiKey.set(apiKeyInput)
+                            showApiKeyDialog = false
+                          }) {
+                            Text("Save")
+                          }
+                        },
+                        dismissButton = {
+                          TextButton(onClick = { showApiKeyDialog = false }) {
+                            Text("Cancel")
+                          }
+                        },
+                      )
+                    }
+                    
+                    PreferenceDivider()
+                    
+                    Preference(
+                      title = { Text("Model") },
+                      summary = { 
+                        Text(
+                          geminiModel.ifBlank { "gemini-2.0-flash" },
+                          color = MaterialTheme.colorScheme.outline,
+                        ) 
+                      },
+                      onClick = { showModelDialog = true },
+                    )
+                    
+                    if (showModelDialog) {
+                      var modelInput by remember { mutableStateOf(geminiModel) }
+                      AlertDialog(
+                        onDismissRequest = { showModelDialog = false },
+                        title = { Text("Gemini Model") },
+                        text = {
+                          Column {
+                            Text(
+                              "Common models: gemini-2.0-flash, gemini-1.5-pro, gemini-1.5-flash",
+                              style = MaterialTheme.typography.bodySmall,
+                              color = MaterialTheme.colorScheme.outline,
+                            )
+                            androidx.compose.material3.OutlinedTextField(
+                              value = modelInput,
+                              onValueChange = { modelInput = it },
+                              label = { Text("Model Name") },
+                              singleLine = true,
+                              modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                            )
+                          }
+                        },
+                        confirmButton = {
+                          TextButton(onClick = {
+                            preferences.geminiModel.set(modelInput)
+                            showModelDialog = false
+                          }) {
+                            Text("Save")
+                          }
+                        },
+                        dismissButton = {
+                          TextButton(onClick = { showModelDialog = false }) {
+                            Text("Cancel")
+                          }
+                        },
+                      )
+                    }
+                  }
+                  
+                  "openai" -> {
+                    Preference(
+                      title = { Text("OpenAI API Key") },
+                      summary = { 
+                        Text(
+                          if (openAiApiKey.isNotBlank()) "••••••••${openAiApiKey.takeLast(4)}" else "Not configured",
+                          color = MaterialTheme.colorScheme.outline,
+                        ) 
+                      },
+                      onClick = { showApiKeyDialog = true },
+                    )
+                    
+                    if (showApiKeyDialog) {
+                      var apiKeyInput by remember { mutableStateOf(openAiApiKey) }
+                      AlertDialog(
+                        onDismissRequest = { showApiKeyDialog = false },
+                        title = { Text("OpenAI API Key") },
+                        text = {
+                          Column {
+                            Text(
+                              "Get your API key from OpenAI platform",
+                              style = MaterialTheme.typography.bodySmall,
+                              color = MaterialTheme.colorScheme.outline,
+                            )
+                            androidx.compose.material3.OutlinedTextField(
+                              value = apiKeyInput,
+                              onValueChange = { apiKeyInput = it },
+                              label = { Text("API Key") },
+                              singleLine = true,
+                              modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                            )
+                          }
+                        },
+                        confirmButton = {
+                          TextButton(onClick = {
+                            preferences.openAiApiKey.set(apiKeyInput)
+                            showApiKeyDialog = false
+                          }) {
+                            Text("Save")
+                          }
+                        },
+                        dismissButton = {
+                          TextButton(onClick = { showApiKeyDialog = false }) {
+                            Text("Cancel")
+                          }
+                        },
+                      )
+                    }
+                    
+                    PreferenceDivider()
+                    
+                    Preference(
+                      title = { Text("Model") },
+                      summary = { 
+                        Text(
+                          openAiModel.ifBlank { "gpt-4o-mini" },
+                          color = MaterialTheme.colorScheme.outline,
+                        ) 
+                      },
+                      onClick = { showModelDialog = true },
+                    )
+                    
+                    if (showModelDialog) {
+                      var modelInput by remember { mutableStateOf(openAiModel) }
+                      AlertDialog(
+                        onDismissRequest = { showModelDialog = false },
+                        title = { Text("OpenAI Model") },
+                        text = {
+                          Column {
+                            Text(
+                              "Common models: gpt-4o, gpt-4o-mini, gpt-3.5-turbo",
+                              style = MaterialTheme.typography.bodySmall,
+                              color = MaterialTheme.colorScheme.outline,
+                            )
+                            androidx.compose.material3.OutlinedTextField(
+                              value = modelInput,
+                              onValueChange = { modelInput = it },
+                              label = { Text("Model Name") },
+                              singleLine = true,
+                              modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                            )
+                          }
+                        },
+                        confirmButton = {
+                          TextButton(onClick = {
+                            preferences.openAiModel.set(modelInput)
+                            showModelDialog = false
+                          }) {
+                            Text("Save")
+                          }
+                        },
+                        dismissButton = {
+                          TextButton(onClick = { showModelDialog = false }) {
+                            Text("Cancel")
+                          }
+                        },
+                      )
+                    }
+                  }
+                  
+                  "custom" -> {
+                    Preference(
+                      title = { Text("API Endpoint") },
+                      summary = { 
+                        Text(
+                          customEndpoint.ifBlank { "Not configured" },
+                          color = MaterialTheme.colorScheme.outline,
+                        ) 
+                      },
+                      onClick = { showEndpointDialog = true },
+                    )
+                    
+                    if (showEndpointDialog) {
+                      var endpointInput by remember { mutableStateOf(customEndpoint) }
+                      AlertDialog(
+                        onDismissRequest = { showEndpointDialog = false },
+                        title = { Text("Custom API Endpoint") },
+                        text = {
+                          Column {
+                            Text(
+                              "Enter OpenAI-compatible API endpoint URL",
+                              style = MaterialTheme.typography.bodySmall,
+                              color = MaterialTheme.colorScheme.outline,
+                            )
+                            androidx.compose.material3.OutlinedTextField(
+                              value = endpointInput,
+                              onValueChange = { endpointInput = it },
+                              label = { Text("Endpoint URL") },
+                              singleLine = true,
+                              placeholder = { Text("https://api.example.com/v1/chat/completions") },
+                              modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                            )
+                          }
+                        },
+                        confirmButton = {
+                          TextButton(onClick = {
+                            preferences.customAiEndpoint.set(endpointInput)
+                            showEndpointDialog = false
+                          }) {
+                            Text("Save")
+                          }
+                        },
+                        dismissButton = {
+                          TextButton(onClick = { showEndpointDialog = false }) {
+                            Text("Cancel")
+                          }
+                        },
+                      )
+                    }
+                    
+                    PreferenceDivider()
+                    
+                    Preference(
+                      title = { Text("API Key") },
+                      summary = { 
+                        Text(
+                          if (customApiKey.isNotBlank()) "••••••••${customApiKey.takeLast(4)}" else "Not configured",
+                          color = MaterialTheme.colorScheme.outline,
+                        ) 
+                      },
+                      onClick = { showApiKeyDialog = true },
+                    )
+                    
+                    if (showApiKeyDialog) {
+                      var apiKeyInput by remember { mutableStateOf(customApiKey) }
+                      AlertDialog(
+                        onDismissRequest = { showApiKeyDialog = false },
+                        title = { Text("Custom API Key") },
+                        text = {
+                          androidx.compose.material3.OutlinedTextField(
+                            value = apiKeyInput,
+                            onValueChange = { apiKeyInput = it },
+                            label = { Text("API Key") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                          )
+                        },
+                        confirmButton = {
+                          TextButton(onClick = {
+                            preferences.customAiApiKey.set(apiKeyInput)
+                            showApiKeyDialog = false
+                          }) {
+                            Text("Save")
+                          }
+                        },
+                        dismissButton = {
+                          TextButton(onClick = { showApiKeyDialog = false }) {
+                            Text("Cancel")
+                          }
+                        },
+                      )
+                    }
+                    
+                    PreferenceDivider()
+                    
+                    Preference(
+                      title = { Text("Model") },
+                      summary = { 
+                        Text(
+                          customModel.ifBlank { "Not configured" },
+                          color = MaterialTheme.colorScheme.outline,
+                        ) 
+                      },
+                      onClick = { showModelDialog = true },
+                    )
+                    
+                    if (showModelDialog) {
+                      var modelInput by remember { mutableStateOf(customModel) }
+                      AlertDialog(
+                        onDismissRequest = { showModelDialog = false },
+                        title = { Text("Custom Model") },
+                        text = {
+                          androidx.compose.material3.OutlinedTextField(
+                            value = modelInput,
+                            onValueChange = { modelInput = it },
+                            label = { Text("Model Name") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                          )
+                        },
+                        confirmButton = {
+                          TextButton(onClick = {
+                            preferences.customAiModel.set(modelInput)
+                            showModelDialog = false
+                          }) {
+                            Text("Save")
+                          }
+                        },
+                        dismissButton = {
+                          TextButton(onClick = { showModelDialog = false }) {
+                            Text("Cancel")
+                          }
+                        },
+                      )
+                    }
+                  }
+                }
+                
+                PreferenceDivider()
+                
+                SwitchPreference(
+                  value = autoClean,
+                  onValueChange = preferences.autoCleanFilename::set,
+                  title = { Text("Auto-clean Filenames") },
+                  summary = { 
+                    Text(
+                      "Automatically clean filename when opening subtitle search",
+                      color = MaterialTheme.colorScheme.outline,
+                    ) 
+                  },
+                )
+              }
             }
           }
         }

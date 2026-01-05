@@ -7,11 +7,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.Edit
@@ -24,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,10 +39,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalFocusManager
+import app.marlboroadvance.mpvex.preferences.AdvancedPreferences
 import app.marlboroadvance.mpvex.presentation.components.PlayerSheet
 import app.marlboroadvance.mpvex.ui.theme.spacing
+import app.marlboroadvance.mpvex.utils.ai.AiFilenameService
 import app.marlboroadvance.mpvex.utils.subtitles.SubtitleSearchResult
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun SubtitleSearchSheet(
@@ -55,14 +63,34 @@ fun SubtitleSearchSheet(
     var results by remember { mutableStateOf<List<SubtitleSearchResult>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
     var hasSearched by remember { mutableStateOf(false) }
+    var isAiCleaning by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    
+    // AI service for filename cleanup
+    val aiService = koinInject<AiFilenameService>()
+    val preferences = koinInject<AdvancedPreferences>()
     
     // Keyboard and focus management
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
+    val context = LocalContext.current
     
     // Store the movie name for insert button
     val movieName = remember { initialQuery }
+    
+    // Auto-clean filename if enabled
+    LaunchedEffect(Unit) {
+        if (preferences.autoCleanFilename.get() && aiService.isAvailable() && movieName.isNotBlank()) {
+            isAiCleaning = true
+            aiService.cleanFilename(movieName).onSuccess { cleanedName ->
+                query = cleanedName
+            }.onFailure { e ->
+                query = movieName
+                Toast.makeText(context, "AI Cleanup Failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+            isAiCleaning = false
+        }
+    }
 
     // Function to perform search
     val performSearch: () -> Unit = {
@@ -111,6 +139,36 @@ fun SubtitleSearchSheet(
                                         contentDescription = "Clear search",
                                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
+                                }
+                            }
+                            // AI cleanup button - only show when AI is available
+                            if (aiService.isAvailable() && movieName.isNotBlank()) {
+                                IconButton(
+                                    onClick = {
+                                        scope.launch {
+                                            isAiCleaning = true
+                                            aiService.cleanFilename(movieName).onSuccess { cleanedName ->
+                                                query = cleanedName
+                                            }.onFailure { e ->
+                                                Toast.makeText(context, "AI Cleanup Failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                                            }
+                                            isAiCleaning = false
+                                        }
+                                    },
+                                    enabled = !isAiCleaning
+                                ) {
+                                    if (isAiCleaning) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(20.dp),
+                                            strokeWidth = 2.dp
+                                        )
+                                    } else {
+                                        Icon(
+                                            imageVector = Icons.Default.AutoAwesome,
+                                            contentDescription = "AI cleanup",
+                                            tint = MaterialTheme.colorScheme.tertiary
+                                        )
+                                    }
                                 }
                             }
                             // Insert movie name button

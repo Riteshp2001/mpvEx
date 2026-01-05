@@ -300,6 +300,30 @@ val MIGRATION_5_6 = object : Migration(5, 6) {
   }
 }
 
+/**
+ * Migration from version 6 to version 7
+ *
+ * Changes:
+ * - Adds filterPreset column to PlaybackStateEntity to persist filter preset selection per-video
+ */
+val MIGRATION_6_7 = object : Migration(6, 7) {
+  override fun migrate(db: SupportSQLiteDatabase) {
+    try {
+      android.util.Log.d("Migration_6_7", "Starting migration from version 6 to version 7")
+
+      // Add filterPreset column to PlaybackStateEntity (default "NONE" means no filter preset)
+      db.execSQL(
+        "ALTER TABLE `PlaybackStateEntity` ADD COLUMN `filterPreset` TEXT NOT NULL DEFAULT 'NONE'"
+      )
+
+      android.util.Log.d("Migration_6_7", "Migration completed successfully")
+    } catch (e: Exception) {
+      android.util.Log.e("Migration_6_7", "Migration failed", e)
+      throw e
+    }
+  }
+}
+
 val DatabaseModule =
   module {
     single<Json> {
@@ -314,7 +338,7 @@ val DatabaseModule =
       Room
         .databaseBuilder(context, MpvExDatabase::class.java, "mpvex.db")
         .setJournalMode(RoomDatabase.JournalMode.WRITE_AHEAD_LOGGING)
-        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
         .fallbackToDestructiveMigration(true) // Fallback if migration fails (last resort)
         .build()
     }

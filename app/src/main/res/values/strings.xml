@@ -232,6 +232,21 @@
     <string name="player_sheets_filters_hue">Hue</string>
     <string name="player_sheets_filters_warning">Some filters may not work on your current video driver</string>
 
+    <!-- Filter Presets -->
+    <string name="player_sheets_filter_presets_title">Filter Presets</string>
+    <string name="filter_preset_none">None</string>
+    <string name="filter_preset_vivid">Vivid</string>
+    <string name="filter_preset_warm_tone">Warm Tone</string>
+    <string name="filter_preset_cool_tone">Cool Tone</string>
+    <string name="filter_preset_soft_pastel">Soft Pastel</string>
+    <string name="filter_preset_cinematic">Cinematic</string>
+    <string name="filter_preset_dramatic">Dramatic</string>
+    <string name="filter_preset_night_mode">Night Mode</string>
+    <string name="filter_preset_nostalgic">Nostalgic</string>
+    <string name="filter_preset_ghibli_style">Ghibli Style</string>
+    <string name="filter_preset_neon_pop">Neon Pop</string>
+    <string name="filter_preset_deep_black">Deep Black</string>
+
     <string name="player_sheets_speed_slider_label">Speed</string>
     <string name="player_sheets_speed_make_default">Make default speed</string>
 

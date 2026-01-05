@@ -3,10 +3,15 @@ package app.marlboroadvance.mpvex.ui.player.controls.components.sheets
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.InsertDriveFile
 import androidx.compose.material.icons.filled.MoreTime
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Search
@@ -20,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import app.marlboroadvance.mpvex.R
 import app.marlboroadvance.mpvex.ui.player.TrackNode
 import app.marlboroadvance.mpvex.ui.theme.spacing
@@ -73,6 +79,7 @@ fun SubtitlesSheet(
         title = getTrackTitle(track, tracks),
         isSelected = isSubtitleSelected(track.id),
         isExternal = track.external == true,
+        externalFilename = track.externalFilename,
         onToggle = { onToggleSubtitle(track.id) },
         onRemove = { onRemoveSubtitle(track.id) },
       )
@@ -86,10 +93,16 @@ fun SubtitleTrackRow(
   title: String,
   isSelected: Boolean,
   isExternal: Boolean,
+  externalFilename: String? = null,
   onToggle: () -> Unit,
   onRemove: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
+  // Determine if this is an online downloaded subtitle
+  // Online subtitles are saved in the app's subtitle download directory (typically contains "subtitles" in path)
+  val isOnlineDownloaded = isExternal && externalFilename != null && 
+    (externalFilename.contains("/subtitles/") || externalFilename.contains("\\subtitles\\"))
+
   Row(
     modifier =
       modifier
@@ -103,6 +116,21 @@ fun SubtitleTrackRow(
       checked = isSelected,
       onCheckedChange = { onToggle() },
     )
+    
+    // Show subtitle type icon for external subtitles
+    if (isExternal) {
+      Icon(
+        imageVector = if (isOnlineDownloaded) Icons.Default.CloudDownload else Icons.Default.InsertDriveFile,
+        contentDescription = if (isOnlineDownloaded) "Online subtitle" else "External subtitle",
+        modifier = Modifier.size(18.dp),
+        tint = if (isOnlineDownloaded) 
+          MaterialTheme.colorScheme.primary 
+        else 
+          MaterialTheme.colorScheme.secondary,
+      )
+      Spacer(modifier = Modifier.width(4.dp))
+    }
+    
     Text(
       title,
       fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
@@ -115,3 +143,4 @@ fun SubtitleTrackRow(
     }
   }
 }
+
