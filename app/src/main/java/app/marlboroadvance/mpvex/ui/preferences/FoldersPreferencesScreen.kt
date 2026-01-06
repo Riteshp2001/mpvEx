@@ -29,6 +29,7 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -62,6 +63,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import org.koin.compose.koinInject
+import app.marlboroadvance.mpvex.preferences.BrowserPreferences
+import app.marlboroadvance.mpvex.preferences.FolderViewMode
+import androidx.compose.material3.Switch
 
 @Serializable
 object FoldersPreferencesScreen : Screen {
@@ -69,6 +73,7 @@ object FoldersPreferencesScreen : Screen {
   @Composable
   override fun Content() {
     val preferences = koinInject<FoldersPreferences>()
+    val browserPreferences = koinInject<BrowserPreferences>()
     val backstack = LocalBackStack.current
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -133,6 +138,82 @@ object FoldersPreferencesScreen : Screen {
           .padding(16.dp),
       ) {
         if (!selectionState.isInSelectionMode) {
+          // Navigation Tabs Visibility Card
+          val showRecentTab by browserPreferences.showRecentTab.collectAsState()
+          val showPlaylistTab by browserPreferences.showPlaylistTab.collectAsState()
+          val showNetworkTab by browserPreferences.showNetworkTab.collectAsState()
+
+          Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+              containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            ),
+          ) {
+            Column(
+              modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            ) {
+              Text(
+                text = "Navigation Tabs",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+              )
+              Text(
+                text = "Show or hide bottom navigation tabs",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+              )
+              
+              Spacer(modifier = Modifier.height(16.dp))
+              
+              // Recent Tab
+              Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+              ) {
+                Text("Recent")
+                Switch(
+                  checked = showRecentTab,
+                  onCheckedChange = { browserPreferences.showRecentTab.set(it) }
+                )
+              }
+              
+              HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+              
+              // Playlist Tab
+              Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+              ) {
+                Text("Playlist")
+                Switch(
+                  checked = showPlaylistTab,
+                  onCheckedChange = { browserPreferences.showPlaylistTab.set(it) }
+                )
+              }
+              
+              HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+              
+              // Network Tab
+              Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+              ) {
+                Text("Network")
+                Switch(
+                  checked = showNetworkTab,
+                  onCheckedChange = { browserPreferences.showNetworkTab.set(it) }
+                )
+              }
+            }
+          }
+
+          Spacer(modifier = Modifier.height(16.dp))
+
           Text(
             text = stringResource(R.string.pref_folders_summary),
             style = MaterialTheme.typography.bodyMedium,

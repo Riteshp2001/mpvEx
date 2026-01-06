@@ -66,6 +66,8 @@ import app.marlboroadvance.mpvex.ui.browser.sheets.PlayLinkSheet
 import app.marlboroadvance.mpvex.ui.compose.LocalLazyGridState
 import app.marlboroadvance.mpvex.ui.compose.LocalLazyListState
 import app.marlboroadvance.mpvex.utils.media.MediaUtils
+import app.marlboroadvance.mpvex.preferences.BrowserPreferences
+import app.marlboroadvance.mpvex.preferences.preference.collectAsState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -127,24 +129,14 @@ object MainScreen : Screen {
     val playlistGridState = rememberLazyGridState()
     val networkListState = rememberLazyListState()
     val networkGridState = rememberLazyGridState()
-    
-    // Current active list state based on selected tab
-    val currentListState = when (selectedTab) {
-        0 -> foldersListState
-        1 -> recentListState
-        2 -> playlistListState
-        3 -> networkListState
-        else -> foldersListState
-    }
+
     
     // Current active grid state based on selected tab
-    val currentGridState = when (selectedTab) {
-        0 -> foldersGridState
-        1 -> recentGridState
-        2 -> playlistGridState
-        3 -> networkGridState
-        else -> foldersGridState
-    }
+    // Since selectedTab now refers to index in *enabled* list, we need to map back to logical ID
+    // However, for simplicity in FAB and content switching, we'll keep selectedTab as the index in the *displayed* list
+    // and map it to the logical "screen ID" where:
+    // 0 = Folders, 1 = Recent, 2 = Playlist, 3 = Network
+
     
     val playlistRepository = koinInject<PlaylistRepository>()
     
@@ -208,20 +200,61 @@ object MainScreen : Screen {
       persistentSelectedTab = selectedTab
     }
 
-    // Define items for the navigation bar
-    val items = listOf("Folders", "Recent", "Playlist", "Network")
-    val selectedIcons = listOf(
-        Icons.Filled.Folder, 
-        Icons.Filled.History,
-        Icons.AutoMirrored.Filled.PlaylistPlay,
-        Icons.Filled.Wifi
+    val browserPreferences = koinInject<BrowserPreferences>()
+    val showRecentTab by browserPreferences.showRecentTab.collectAsState()
+    val showPlaylistTab by browserPreferences.showPlaylistTab.collectAsState()
+    val showNetworkTab by browserPreferences.showNetworkTab.collectAsState()
+
+    // Define navigation items with their logical IDs
+    data class NavItem(val title: String, val logicalId: Int, val selectedIcon: androidx.compose.ui.graphics.vector.ImageVector, val unselectedIcon: androidx.compose.ui.graphics.vector.ImageVector)
+
+    val allItems = listOf(
+        NavItem("Folders", 0, Icons.Filled.Folder, Icons.Outlined.Folder),
+        NavItem("Recent", 1, Icons.Filled.History, Icons.Outlined.History),
+        NavItem("Playlist", 2, Icons.AutoMirrored.Filled.PlaylistPlay, Icons.AutoMirrored.Outlined.PlaylistPlay),
+        NavItem("Network", 3, Icons.Filled.Wifi, Icons.Outlined.Wifi)
     )
-    val unselectedIcons = listOf(
-        Icons.Outlined.Folder, 
-        Icons.Outlined.History,
-        Icons.AutoMirrored.Outlined.PlaylistPlay,
-        Icons.Outlined.Wifi
-    )
+
+    // Filter enabled items
+    val enabledItems = remember(showRecentTab, showPlaylistTab, showNetworkTab) {
+        allItems.filter { item ->
+            when (item.logicalId) {
+                0 -> true // Folders is always shown
+                1 -> showRecentTab
+                2 -> showPlaylistTab
+                3 -> showNetworkTab
+                else -> true
+            }
+        }
+    }
+
+    // Ensure selectedTab is within bounds of enabledItems
+    LaunchedEffect(enabledItems.size) {
+        if (selectedTab >= enabledItems.size) {
+            selectedTab = 0
+        }
+    }
+
+    // Get the logical ID of the currently selected tab
+    val currentLogicalId = if (selectedTab < enabledItems.size) enabledItems[selectedTab].logicalId else 0
+
+    // Update list/grid state helpers based on current logical ID
+    // (Note: we moved these here because they depend on currentLogicalId)
+    val currentListState = when (currentLogicalId) {
+        0 -> foldersListState
+        1 -> recentListState
+        2 -> playlistListState
+        3 -> networkListState
+        else -> foldersListState
+    }
+    
+    val currentGridState = when (currentLogicalId) {
+        0 -> foldersGridState
+        1 -> recentGridState
+        2 -> playlistGridState
+        3 -> networkGridState
+        else -> foldersGridState
+    }
 
     // Use Scaffold only for bottom bar, let nested screens handle their own top bars and padding
     Scaffold(
@@ -229,21 +262,24 @@ object MainScreen : Screen {
       bottomBar = {
         // Use AnimatedVisibility to smoothly animate the navigation bar
         // Only hide navigation bar when specifically needed (video selection operations)
+        // Also hide if only 1 tab is enabled (user preferences)
+        val showBottomNav = enabledItems.size > 1 && !hideNavigationBar.value
+        
         AnimatedVisibility(
-          visible = !hideNavigationBar.value,
+          visible = showBottomNav,
           enter = slideInVertically(initialOffsetY = { it }), // Start from below the screen
           exit = slideOutVertically(targetOffsetY = { it }) // Slide down off screen
         ) {
           NavigationBar {
-              items.forEachIndexed { index, item ->
+              enabledItems.forEachIndexed { index, item ->
                   NavigationBarItem(
                       icon = {
                           Icon(
-                              if (selectedTab == index) selectedIcons[index] else unselectedIcons[index],
-                              contentDescription = item,
+                              if (selectedTab == index) item.selectedIcon else item.unselectedIcon,
+                              contentDescription = item.title,
                           )
                       },
-                      label = { Text(item) },
+                      label = { Text(item.title) },
                       selected = selectedTab == index,
                       onClick = { selectedTab = index },
                   )
@@ -252,15 +288,16 @@ object MainScreen : Screen {
         }
       },
       floatingActionButton = {
-        // Only show FAB when not in selection mode, and not on Network tab (index 3)
-        if (!isInSelectionMode.value && selectedTab != 3) {
+        // Only show FAB when not in selection mode
+        // Use currentLogicalId to determine content
+        if (!isInSelectionMode.value && currentLogicalId != 3) {
           AnimatedVisibility(
             visible = true,
             enter = fadeIn(),
             exit = fadeOut()
           ) {
-            // Show different FAB content based on selected tab
-            when (selectedTab) {
+            // Show different FAB content based on selected tab (logical ID)
+            when (currentLogicalId) {
               // Folders tab (0)
               0 -> {
                 MediaActionFab(
@@ -345,7 +382,7 @@ object MainScreen : Screen {
     ) { paddingValues ->
       // Each screen handles its own bottom padding for the navigation bar
       Box(modifier = Modifier.fillMaxSize()) {
-        when (selectedTab) {
+        when (currentLogicalId) {
           0 -> {
             CompositionLocalProvider(
               LocalLazyListState provides foldersListState,

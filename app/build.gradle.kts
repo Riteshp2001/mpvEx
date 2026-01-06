@@ -194,6 +194,8 @@ dependencies {
 
   implementation(libs.coil.core)
   implementation(libs.coil.compose)
+  
+  implementation(libs.jsoup)
 }
 
 fun getCommitCount(): String = runCommand("git rev-list --count HEAD") ?: "0"

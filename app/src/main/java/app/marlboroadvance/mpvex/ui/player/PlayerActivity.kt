@@ -211,6 +211,19 @@ class PlayerActivity :
   private var noisyReceiverRegistered = false
   private var mpvInitialized = false // Track MPV initialization state
 
+  // ==================== Auto-Resume State ====================
+
+  /**
+   * Tracks if video was playing before screen turned off or activity paused.
+   * Used to auto-resume when screen turns back on.
+   */
+  private var wasPlayingBeforePause = false
+
+  /**
+   * Tracks if pause was triggered by screen off (not user action).
+   */
+  private var pausedByScreenOff = false
+
   // ==================== Background Playback ====================
 
   /**
@@ -629,6 +642,13 @@ class PlayerActivity :
       val isInPip = isInPictureInPictureMode
       val shouldPause = !audioPreferences.automaticBackgroundPlayback.get() || isUserFinishing
 
+      // Track if video was playing before this pause (for screen-off auto-resume)
+      val isPaused = viewModel.paused ?: true
+      if (!isInPip && shouldPause && !isPaused && !isUserFinishing) {
+        wasPlayingBeforePause = true
+        pausedByScreenOff = true
+      }
+
       if (!isInPip && shouldPause) {
         viewModel.pause()
       }
@@ -636,6 +656,9 @@ class PlayerActivity :
       // Restore UI immediately when user is finishing for instant feedback
       if (isUserFinishing && !isInPip) {
         restoreSystemUI()
+        // Clear auto-resume state when user is intentionally leaving
+        wasPlayingBeforePause = false
+        pausedByScreenOff = false
       }
 
       saveVideoPlaybackState(fileName)
@@ -716,6 +739,19 @@ class PlayerActivity :
 
       if (serviceBound) {
         endBackgroundPlayback()
+      }
+
+      // Auto-resume if video was playing before screen turned off
+      if (pausedByScreenOff && wasPlayingBeforePause && isReady) {
+        val isInPip = runCatching { isInPictureInPictureMode }.getOrDefault(false)
+        val isBackgroundPlayback = audioPreferences.automaticBackgroundPlayback.get()
+        // Only auto-resume if not in PIP mode and not using background playback
+        if (!isInPip && !isBackgroundPlayback && !serviceBound) {
+          viewModel.unpause()
+          Log.d(TAG, "Auto-resumed playback after screen on")
+        }
+        pausedByScreenOff = false
+        wasPlayingBeforePause = false
       }
     }.onFailure { e ->
       Log.e(TAG, "Error during onStart", e)

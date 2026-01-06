@@ -40,6 +40,11 @@ class BrowserPreferences(
 
   // Auto-scroll to last played media preference (like MX Player)
   val autoScrollToLastPlayed = preferenceStore.getBoolean("auto_scroll_to_last_played", false)
+
+  // Tab visibility preferences for Bottom Navigation
+  val showRecentTab = preferenceStore.getBoolean("show_recent_tab", true)
+  val showPlaylistTab = preferenceStore.getBoolean("show_playlist_tab", true)
+  val showNetworkTab = preferenceStore.getBoolean("show_network_tab", true)
 }
 
 /**

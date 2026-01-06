@@ -63,6 +63,7 @@ fun VideoCard(
   progressPercentage: Float? = null,
   isOldAndUnplayed: Boolean = false,
   hasExternalSubtitles: Boolean = false,
+  externalSubtitleFormat: String? = null,
   onThumbClick: () -> Unit = {},
   isGridMode: Boolean = false,
   gridColumns: Int = 1,
@@ -250,7 +251,7 @@ fun VideoCard(
             if (showSubtitleIndicator) {
               if (video.hasEmbeddedSubtitles || hasExternalSubtitles) {
                 Text(
-                  text = if (hasExternalSubtitles) "SRT" else video.subtitleCodec,
+                  text = if (hasExternalSubtitles) (externalSubtitleFormat ?: "SUB") else video.subtitleCodec,
                   style = MaterialTheme.typography.labelSmall,
                   modifier = Modifier
                     .background(
@@ -488,7 +489,7 @@ fun VideoCard(
             if (showSubtitleIndicator) {
               if (video.hasEmbeddedSubtitles || hasExternalSubtitles) {
                 Text(
-                  text = if (hasExternalSubtitles) "SRT" else video.subtitleCodec,
+                  text = if (hasExternalSubtitles) (externalSubtitleFormat ?: "SUB") else video.subtitleCodec,
                   style = MaterialTheme.typography.labelSmall,
                   modifier = Modifier
                     .background(

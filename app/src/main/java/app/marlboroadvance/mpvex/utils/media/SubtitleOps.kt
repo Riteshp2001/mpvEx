@@ -186,18 +186,34 @@ object SubtitleOps : KoinComponent {
   ) {
     val videoFile = File(videoFilePath)
     val videoDirectory = videoFile.parentFile ?: return
-    val baseName = videoFileName.substringBeforeLast('.')
+    
+    // Find subtitles in the video directory using shared Utils
+    val subtitles = videoDirectory.listFiles()?.filter { file ->
+      file.isFile &&
+        SubtitleUtils.isSubtitleFile(file.name)
+    } ?: emptyList()
 
-    val subtitles =
-      videoDirectory.listFiles()?.filter { file ->
-        file.isFile &&
-          isSubtitleFile(file.name) &&
-          file.nameWithoutExtension.startsWith(baseName, ignoreCase = true)
-      } ?: emptyList()
+    // Also check for subtitles in common subdirectories (Subs, Subtitles, Sub)
+    val subDirectoryNames = listOf("Subs", "subs", "Subtitles", "subtitles", "Sub", "sub")
+    val subsInSubDirs = subDirectoryNames.flatMap { subDirName ->
+      val subDir = File(videoDirectory, subDirName)
+      if (subDir.exists() && subDir.isDirectory) {
+        subDir.listFiles()?.filter { file ->
+          file.isFile && 
+          SubtitleUtils.isSubtitleFile(file.name)
+        } ?: emptyList()
+      } else {
+        emptyList()
+      }
+    }
 
-    if (subtitles.isNotEmpty()) {
+    // Combine and deduplicate
+    val allSubtitles = (subtitles + subsInSubDirs).distinctBy { it.absolutePath }
+
+    if (allSubtitles.isNotEmpty()) {
+      Log.d(TAG, "Found ${allSubtitles.size} subtitle file(s) for: $videoFileName")
       withContext(Dispatchers.Main) {
-        subtitles.forEachIndexed { index, subtitle ->
+        allSubtitles.forEachIndexed { index, subtitle ->
           // MPV command format: sub-add <url> [<flags> [<title>]]
           // Use "select" for the first autoloaded subtitle so it is enabled by default
           val flag = if (index == 0) "select" else "auto"
