@@ -39,6 +39,8 @@ import me.zhanghai.compose.preference.SwitchPreference
 import org.koin.compose.koinInject
 import kotlin.math.roundToInt
 
+import app.marlboroadvance.mpvex.ui.utils.rememberTranslatedString
+
 @Serializable
 object AppearancePreferencesScreen : Screen {
     @OptIn(ExperimentalMaterial3Api::class)
@@ -65,7 +67,7 @@ object AppearancePreferencesScreen : Screen {
                 TopAppBar(
                     title = {
                         Text(
-                            text = stringResource(R.string.pref_appearance_title),
+                            text = rememberTranslatedString(R.string.pref_appearance_title),
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.ExtraBold,
                             color = MaterialTheme.colorScheme.primary,
@@ -91,15 +93,17 @@ object AppearancePreferencesScreen : Screen {
                         .padding(padding),
                 ) {
                     item {
-                        PreferenceSectionHeader(title = stringResource(id = R.string.pref_appearance_category_theme))
+                        PreferenceSectionHeader(title = rememberTranslatedString(R.string.pref_appearance_category_theme))
                     }
 
                     item {
                         PreferenceCard {
                             Column(modifier = Modifier.padding(vertical = 8.dp)) {
                                 // Dark mode selector
+                                // Note: Titles of enums might need manual translation if they are just strings, 
+                                // but here we are using stringResource(it.titleRes) which rememberTranslatedString handles.
                                 MultiChoiceSegmentedButton(
-                                    choices = DarkMode.entries.map { stringResource(it.titleRes) }.toImmutableList(),
+                                    choices = DarkMode.entries.map { rememberTranslatedString(it.titleRes) }.toImmutableList(),
                                     selectedIndices = persistentListOf(DarkMode.entries.indexOf(darkMode)),
                                     onClick = { preferences.darkMode.set(DarkMode.entries[it]) },
                                 )
@@ -124,10 +128,10 @@ object AppearancePreferencesScreen : Screen {
                             SwitchPreference(
                                 value = amoledMode,
                                 onValueChange = { preferences.amoledMode.set(it) },
-                                title = { Text(text = stringResource(id = R.string.pref_appearance_amoled_mode_title)) },
+                                title = { Text(text = rememberTranslatedString(R.string.pref_appearance_amoled_mode_title)) },
                                 summary = {
                                     Text(
-                                        text = stringResource(id = R.string.pref_appearance_amoled_mode_summary),
+                                        text = rememberTranslatedString(R.string.pref_appearance_amoled_mode_summary),
                                         color = MaterialTheme.colorScheme.outline,
                                     )
                                 },
@@ -137,7 +141,7 @@ object AppearancePreferencesScreen : Screen {
                     }
 
                     item {
-                        PreferenceSectionHeader(title = stringResource(id = R.string.pref_appearance_category_file_browser))
+                        PreferenceSectionHeader(title = rememberTranslatedString(R.string.pref_appearance_category_file_browser))
                     }
 
                     item {
@@ -148,12 +152,12 @@ object AppearancePreferencesScreen : Screen {
                                 onValueChange = { preferences.unlimitedNameLines.set(it) },
                                 title = {
                                     Text(
-                                        text = stringResource(id = R.string.pref_appearance_unlimited_name_lines_title),
+                                        text = rememberTranslatedString(R.string.pref_appearance_unlimited_name_lines_title),
                                     )
                                 },
                                 summary = {
                                     Text(
-                                        text = stringResource(id = R.string.pref_appearance_unlimited_name_lines_summary),
+                                        text = rememberTranslatedString(R.string.pref_appearance_unlimited_name_lines_summary),
                                         color = MaterialTheme.colorScheme.outline,
                                     )
                                 }
@@ -167,12 +171,12 @@ object AppearancePreferencesScreen : Screen {
                                 onValueChange = { preferences.showHiddenFiles.set(it) },
                                 title = {
                                     Text(
-                                        text = stringResource(id = R.string.pref_appearance_show_hidden_files_title),
+                                        text = rememberTranslatedString(R.string.pref_appearance_show_hidden_files_title),
                                     )
                                 },
                                 summary = {
                                     Text(
-                                        text = stringResource(id = R.string.pref_appearance_show_hidden_files_summary),
+                                        text = rememberTranslatedString(R.string.pref_appearance_show_hidden_files_summary),
                                         color = MaterialTheme.colorScheme.outline,
                                     )
                                 }
@@ -186,12 +190,12 @@ object AppearancePreferencesScreen : Screen {
                                 onValueChange = { preferences.showUnplayedOldVideoLabel.set(it) },
                                 title = {
                                     Text(
-                                        text = stringResource(id = R.string.pref_appearance_show_unplayed_old_video_label_title),
+                                        text = rememberTranslatedString(R.string.pref_appearance_show_unplayed_old_video_label_title),
                                     )
                                 },
                                 summary = {
                                     Text(
-                                        text = stringResource(id = R.string.pref_appearance_show_unplayed_old_video_label_summary),
+                                        text = rememberTranslatedString(R.string.pref_appearance_show_unplayed_old_video_label_summary),
                                         color = MaterialTheme.colorScheme.outline,
                                     )
                                 }
@@ -203,12 +207,12 @@ object AppearancePreferencesScreen : Screen {
                             SliderPreference(
                                 value = unplayedOldVideoDays.toFloat(),
                                 onValueChange = { preferences.unplayedOldVideoDays.set(it.roundToInt()) },
-                                title = { Text(text = stringResource(id = R.string.pref_appearance_unplayed_old_video_days_title)) },
+                                title = { Text(text = rememberTranslatedString(R.string.pref_appearance_unplayed_old_video_days_title)) },
                                 valueRange = 1f..30f,
                                 summary = {
                                     Text(
-                                        text = stringResource(
-                                            id = R.string.pref_appearance_unplayed_old_video_days_summary,
+                                        text = rememberTranslatedString(
+                                            R.string.pref_appearance_unplayed_old_video_days_summary,
                                             unplayedOldVideoDays,
                                         ),
                                         color = MaterialTheme.colorScheme.outline,
@@ -226,11 +230,11 @@ object AppearancePreferencesScreen : Screen {
                                 value = autoScrollToLastPlayed,
                                 onValueChange = { browserPreferences.autoScrollToLastPlayed.set(it) },
                                 title = {
-                                    Text(text = stringResource(R.string.pref_appearance_auto_scroll_title))
+                                    Text(text = rememberTranslatedString(R.string.pref_appearance_auto_scroll_title))
                                 },
                                 summary = {
                                     Text(
-                                        text = stringResource(R.string.pref_appearance_auto_scroll_summary),
+                                        text = rememberTranslatedString(R.string.pref_appearance_auto_scroll_summary),
                                         color = MaterialTheme.colorScheme.outline,
                                     )
                                 }
@@ -244,12 +248,12 @@ object AppearancePreferencesScreen : Screen {
                                 onValueChange = { gesturePreferences.tapThumbnailToSelect.set(it) },
                                 title = {
                                     Text(
-                                        text = stringResource(id = R.string.pref_gesture_tap_thumbnail_to_select_title),
+                                        text = rememberTranslatedString(R.string.pref_gesture_tap_thumbnail_to_select_title),
                                     )
                                 },
                                 summary = {
                                     Text(
-                                        text = stringResource(id = R.string.pref_gesture_tap_thumbnail_to_select_summary),
+                                        text = rememberTranslatedString(R.string.pref_gesture_tap_thumbnail_to_select_summary),
                                         color = MaterialTheme.colorScheme.outline,
                                     )
                                 }
@@ -263,12 +267,12 @@ object AppearancePreferencesScreen : Screen {
                                 onValueChange = { preferences.showNetworkThumbnails.set(it) },
                                 title = {
                                     Text(
-                                        text = stringResource(id = R.string.pref_appearance_show_network_thumbnails_title),
+                                        text = rememberTranslatedString(R.string.pref_appearance_show_network_thumbnails_title),
                                     )
                                 },
                                 summary = {
                                     Text(
-                                        text = stringResource(id = R.string.pref_appearance_show_network_thumbnails_summary),
+                                        text = rememberTranslatedString(R.string.pref_appearance_show_network_thumbnails_summary),
                                         color = MaterialTheme.colorScheme.outline,
                                     )
                                 }

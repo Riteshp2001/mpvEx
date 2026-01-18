@@ -29,7 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import app.marlboroadvance.mpvex.ui.utils.rememberTranslatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -64,7 +64,7 @@ fun AudioTracksSheet(
       text = { Text(infoDialogData!!.second) },
       confirmButton = {
         androidx.compose.material3.TextButton(onClick = { infoDialogData = null }) {
-          Text(stringResource(R.string.generic_ok))
+          Text(rememberTranslatedString(R.string.generic_ok))
         }
       }
     )
@@ -75,7 +75,7 @@ fun AudioTracksSheet(
     onDismissRequest = onDismissRequest,
     header = {
       AddTrackRow(
-        stringResource(R.string.player_sheets_add_ext_audio),
+        rememberTranslatedString(R.string.player_sheets_add_ext_audio),
         onAddAudioTrack,
         actions = {
           IconButton(onClick = onOpenDelayPanel) {
@@ -104,7 +104,7 @@ fun AudioTracksSheet(
           verticalAlignment = Alignment.CenterVertically
         ) {
           Text(
-            text = stringResource(id = R.string.pref_audio_channels),
+            text = rememberTranslatedString(id = R.string.pref_audio_channels),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.primary
           )
@@ -141,7 +141,7 @@ fun AudioTracksSheet(
                 }
                 MPVLib.setPropertyString(it.property, it.value)
               },
-              label = { Text(text = stringResource(id = it.title)) },
+              label = { Text(text = rememberTranslatedString(id = it.title)) },
             )
           }
         }

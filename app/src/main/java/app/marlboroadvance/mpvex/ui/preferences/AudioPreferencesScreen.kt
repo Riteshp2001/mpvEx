@@ -36,6 +36,8 @@ import me.zhanghai.compose.preference.SwitchPreference
 import me.zhanghai.compose.preference.TextFieldPreference
 import org.koin.compose.koinInject
 
+import app.marlboroadvance.mpvex.ui.utils.rememberTranslatedString
+
 @Serializable
 object AudioPreferencesScreen : Screen {
   @OptIn(ExperimentalMaterial3Api::class)
@@ -50,7 +52,7 @@ object AudioPreferencesScreen : Screen {
         TopAppBar(
           title = { 
             Text(
-              text = stringResource(R.string.pref_audio),
+              text = rememberTranslatedString(R.string.pref_audio),
               style = MaterialTheme.typography.headlineSmall,
               fontWeight = FontWeight.ExtraBold,
               color = MaterialTheme.colorScheme.primary,
@@ -76,7 +78,7 @@ object AudioPreferencesScreen : Screen {
               .padding(padding),
         ) {
           item {
-            PreferenceSectionHeader(title = stringResource(R.string.pref_audio))
+            PreferenceSectionHeader(title = rememberTranslatedString(R.string.pref_audio))
           }
           
           item {
@@ -86,7 +88,7 @@ object AudioPreferencesScreen : Screen {
             value = preferredLanguages,
             onValueChange = { preferences.preferredLanguages.set(it) },
             textToValue = { it },
-            title = { Text(stringResource(R.string.pref_preferred_languages)) },
+            title = { Text(rememberTranslatedString(R.string.pref_preferred_languages)) },
             summary = {
                 if (preferredLanguages.isNotBlank()) {
                   Text(
@@ -95,14 +97,14 @@ object AudioPreferencesScreen : Screen {
                   )
                 } else {
                   Text(
-                    stringResource(R.string.not_set_video_default),
+                    rememberTranslatedString(R.string.not_set_video_default),
                     color = MaterialTheme.colorScheme.outline,
                   )
                 }
               },
             textField = { value, onValueChange, _ ->
               Column {
-                Text(stringResource(R.string.pref_audio_preferred_language))
+                Text(rememberTranslatedString(R.string.pref_audio_preferred_language))
                 TextField(
                   value,
                   onValueChange,
@@ -117,10 +119,10 @@ object AudioPreferencesScreen : Screen {
           SwitchPreference(
             value = audioPitchCorrection,
             onValueChange = { preferences.audioPitchCorrection.set(it) },
-            title = { Text(stringResource(R.string.pref_audio_pitch_correction_title)) },
+            title = { Text(rememberTranslatedString(R.string.pref_audio_pitch_correction_title)) },
             summary = { 
               Text(
-                stringResource(R.string.pref_audio_pitch_correction_summary),
+                rememberTranslatedString(R.string.pref_audio_pitch_correction_summary),
                 color = MaterialTheme.colorScheme.outline,
               ) 
             },
@@ -131,10 +133,10 @@ object AudioPreferencesScreen : Screen {
           SwitchPreference(
             value = volumeNormalization,
             onValueChange = { preferences.volumeNormalization.set(it) },
-            title = { Text(stringResource(R.string.pref_audio_volume_normalization_title)) },
+            title = { Text(rememberTranslatedString(R.string.pref_audio_volume_normalization_title)) },
             summary = { 
               Text(
-                stringResource(R.string.pref_audio_volume_normalization_summary),
+                rememberTranslatedString(R.string.pref_audio_volume_normalization_summary),
                 color = MaterialTheme.colorScheme.outline,
               ) 
             },
@@ -145,7 +147,7 @@ object AudioPreferencesScreen : Screen {
           SwitchPreference(
             value = automaticBackgroundPlayback,
             onValueChange = { preferences.automaticBackgroundPlayback.set(it) },
-            title = { Text(stringResource(R.string.background_playback_title)) },
+            title = { Text(rememberTranslatedString(R.string.background_playback_title)) },
           )
           
           PreferenceDivider()
@@ -155,7 +157,7 @@ object AudioPreferencesScreen : Screen {
             onValueChange = { preferences.audioChannels.set(it) },
             values = AudioChannels.entries,
             valueToText = { AnnotatedString(context.getString(it.title)) },
-            title = { Text(text = stringResource(id = R.string.pref_audio_channels)) },
+            title = { Text(text = rememberTranslatedString(R.string.pref_audio_channels)) },
             summary = { 
               Text(
                 text = context.getString(audioChannel.title),
@@ -169,12 +171,12 @@ object AudioPreferencesScreen : Screen {
           SliderPreference(
             value = volumeBoostCap.toFloat(),
             onValueChange = { preferences.volumeBoostCap.set(it.toInt()) },
-            title = { Text(stringResource(R.string.pref_audio_volume_boost_cap)) },
+            title = { Text(rememberTranslatedString(R.string.pref_audio_volume_boost_cap)) },
             valueRange = 0f..200f,
             summary = {
               Text(
                 if (volumeBoostCap == 0) {
-                  stringResource(R.string.generic_disabled)
+                  rememberTranslatedString(R.string.generic_disabled)
                 } else {
                   volumeBoostCap.toString()
                 },

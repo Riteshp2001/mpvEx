@@ -180,12 +180,14 @@ dependencies {
   implementation(libs.truetype.parser)
   implementation(libs.fsaf)
   implementation(libs.mediainfo.lib)
+  implementation(libs.mlkit.translate)
+  implementation(libs.kotlinx.coroutines.play.services)
   implementation(files("libs/mpv-android-lib-v0.0.3.aar"))
 
   // Network protocol libraries
   implementation(libs.smbj) // SMB/CIFS
   implementation(libs.commons.net) // FTP
-  implementation(libs.sardine.android) { 
+  implementation(libs.sardine.android) {
     exclude(group = "xpp3", module = "xpp3")
   }
   implementation(libs.nanohttpd)

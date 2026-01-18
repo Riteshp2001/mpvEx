@@ -9,7 +9,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import app.marlboroadvance.mpvex.ui.utils.rememberTranslatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -61,7 +61,7 @@ fun ChapterTrack(
     horizontalArrangement = Arrangement.SpaceBetween,
   ) {
     Text(
-      stringResource(R.string.player_sheets_track_title_wo_lang, index + 1, chapter.name),
+      rememberTranslatedString(R.string.player_sheets_track_title_wo_lang, index + 1, chapter.name),
       fontStyle = if (selected) FontStyle.Italic else FontStyle.Normal,
       fontWeight = if (selected) FontWeight.ExtraBold else FontWeight.Normal,
       maxLines = 1,

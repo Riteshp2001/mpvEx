@@ -21,6 +21,9 @@ import app.marlboroadvance.mpvex.preferences.AudioPreferences
 import app.marlboroadvance.mpvex.preferences.GesturePreferences
 import app.marlboroadvance.mpvex.preferences.PlayerPreferences
 import app.marlboroadvance.mpvex.preferences.SubtitlesPreferences
+import app.marlboroadvance.mpvex.preferences.TranslationPreferences
+import app.marlboroadvance.mpvex.domain.repository.TranslationRepository
+import kotlinx.coroutines.flow.combine
 import `is`.xyz.mpv.MPVLib
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -76,6 +79,8 @@ class PlayerViewModel(
   private val gesturePreferences: GesturePreferences by inject()
   private val audioPreferences: AudioPreferences by inject()
   private val subtitlesPreferences: SubtitlesPreferences by inject()
+  private val translationPreferences: TranslationPreferences by inject()
+  private val translationRepository: TranslationRepository by inject()
   private val json: Json by inject()
   private val playbackStateDao: app.marlboroadvance.mpvex.database.dao.PlaybackStateDao by inject()
 
@@ -108,25 +113,77 @@ class PlayerViewModel(
   val maxVolume = host.audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
 
   val subtitleTracks: StateFlow<List<TrackNode>> =
-    MPVLib.propNode["track-list"]
-      .map { node ->
-        node?.toObject<List<TrackNode>>(json)?.filter { it.isSubtitle }?.toImmutableList()
-          ?: persistentListOf()
-      }.stateIn(viewModelScope, SharingStarted.Lazily, persistentListOf())
+    combine(
+      MPVLib.propNode["track-list"],
+      translationPreferences.translationEnabled.changes(),
+      translationPreferences.targetLanguage.changes()
+    ) { node, enabled, _ ->
+      val list = node?.toObject<List<TrackNode>>(json)?.filter { it.isSubtitle } ?: emptyList()
+      if (enabled) {
+        list.map { track ->
+          val title = track.title
+          if (!title.isNullOrBlank()) {
+             val translated = translationRepository.translate(title).getOrDefault(title)
+             track.copy(title = translated)
+          } else track
+        }.toImmutableList()
+      } else {
+        list.toImmutableList()
+      }
+    }.stateIn(viewModelScope, SharingStarted.Lazily, persistentListOf())
 
   val audioTracks: StateFlow<List<TrackNode>> =
-    MPVLib.propNode["track-list"]
-      .map { node ->
-        node?.toObject<List<TrackNode>>(json)?.filter { it.isAudio }?.toImmutableList()
-          ?: persistentListOf()
-      }.stateIn(viewModelScope, SharingStarted.Lazily, persistentListOf())
+    combine(
+      MPVLib.propNode["track-list"],
+      translationPreferences.translationEnabled.changes(),
+      translationPreferences.targetLanguage.changes()
+    ) { node, enabled, _ ->
+      val list = node?.toObject<List<TrackNode>>(json)?.filter { it.isAudio } ?: emptyList()
+       if (enabled) {
+        list.map { track ->
+          val title = track.title
+          if (!title.isNullOrBlank()) {
+             val translated = translationRepository.translate(title).getOrDefault(title)
+             track.copy(title = translated)
+          } else track
+        }.toImmutableList()
+      } else {
+        list.toImmutableList()
+      }
+    }.stateIn(viewModelScope, SharingStarted.Lazily, persistentListOf())
 
   val chapters: StateFlow<List<dev.vivvvek.seeker.Segment>> =
-    MPVLib.propNode["chapter-list"]
-      .map { node ->
-        node?.toObject<List<ChapterNode>>(json)?.map { it.toSegment() }?.toImmutableList()
-          ?: persistentListOf()
-      }.stateIn(viewModelScope, SharingStarted.Lazily, persistentListOf())
+    combine(
+      MPVLib.propNode["chapter-list"],
+      translationPreferences.translationEnabled.changes(),
+      translationPreferences.targetLanguage.changes()
+    ) { node, enabled, _ ->
+      val list = node?.toObject<List<ChapterNode>>(json) ?: emptyList()
+      if (enabled) {
+        // Map linearly for now - optimize if slow
+        list.map { chapter ->
+           val title = chapter.title ?: ""
+           val translated = translationRepository.translate(title).getOrDefault(title)
+           chapter.copy(title = translated).toSegment()
+        }.toImmutableList()
+      } else {
+        list.map { it.toSegment() }.toImmutableList()
+      }
+    }.stateIn(viewModelScope, SharingStarted.Lazily, persistentListOf())
+
+  val mediaTitle: StateFlow<String?> =
+    combine(
+      MPVLib.propString["media-title"],
+      translationPreferences.translationEnabled.changes(),
+      translationPreferences.targetLanguage.changes()
+    ) { title, enabled, _ ->
+       if (title.isNullOrBlank()) return@combine null
+       if (enabled) {
+         translationRepository.translate(title).getOrDefault(title)
+       } else {
+         title
+       }
+    }.stateIn(viewModelScope, SharingStarted.Lazily, null)
 
   // UI state
   private val _controlsShown = MutableStateFlow(false)

@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.TextSnippet
 import androidx.compose.material.icons.automirrored.outlined.ViewQuilt
 import androidx.compose.material.icons.outlined.Audiotrack
 import androidx.compose.material.icons.outlined.Code
@@ -40,6 +41,7 @@ import app.marlboroadvance.mpvex.R
 import app.marlboroadvance.mpvex.presentation.Screen
 import app.marlboroadvance.mpvex.ui.utils.LocalBackStack
 import kotlinx.serialization.Serializable
+import app.marlboroadvance.mpvex.ui.utils.rememberTranslatedString
 import me.zhanghai.compose.preference.Preference
 import me.zhanghai.compose.preference.ProvidePreferenceLocals
 
@@ -54,7 +56,7 @@ object PreferencesScreen : Screen {
         TopAppBar(
           title = { 
             Text(
-              text = stringResource(R.string.pref_preferences),
+              text = rememberTranslatedString(R.string.pref_preferences),
               style = MaterialTheme.typography.headlineSmall,
               fontWeight = FontWeight.ExtraBold,
               color = MaterialTheme.colorScheme.primary,
@@ -79,7 +81,7 @@ object PreferencesScreen : Screen {
               .fillMaxSize()
               .padding(padding),
         ) {
-          // Search bar - full width, prominent placement
+              // Search bar - full width, prominent placement
           item {
             Surface(
               modifier = Modifier
@@ -103,7 +105,7 @@ object PreferencesScreen : Screen {
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                  text = stringResource(R.string.settings_search_hint),
+                  text = rememberTranslatedString(R.string.settings_search_hint),
                   style = MaterialTheme.typography.bodyLarge,
                   color = MaterialTheme.colorScheme.outline,
                 )
@@ -111,18 +113,18 @@ object PreferencesScreen : Screen {
             }
           }
           
-          // UI & Appearance Section
+          
           item {
-            PreferenceSectionHeader(title = "UI & Appearance")
+            PreferenceSectionHeader(title = rememberTranslatedString("UI & Appearance"))
           }
           
           item {
             PreferenceCard {
               Preference(
-                title = { Text(text = stringResource(id = R.string.pref_appearance_title)) },
+                title = { Text(text = rememberTranslatedString(id = R.string.pref_appearance_title)) },
                 summary = { 
                   Text(
-                    text = stringResource(id = R.string.pref_appearance_summary),
+                    text = rememberTranslatedString(id = R.string.pref_appearance_summary),
                     color = MaterialTheme.colorScheme.outline
                   ) 
                 },
@@ -140,10 +142,10 @@ object PreferencesScreen : Screen {
               
               Preference(
 
-                title = { Text(text = stringResource(id = R.string.pref_layout_title)) },
+                title = { Text(text = rememberTranslatedString(id = R.string.pref_layout_title)) },
                 summary = { 
                   Text(
-                    text = stringResource(id = R.string.pref_layout_summary),
+                    text = rememberTranslatedString(id = R.string.pref_layout_summary),
                     color = MaterialTheme.colorScheme.outline
                   ) 
                 },
@@ -161,17 +163,17 @@ object PreferencesScreen : Screen {
           
           // Playback & Controls Section
           item {
-            PreferenceSectionHeader(title = "Playback & Controls")
+             PreferenceSectionHeader(title = rememberTranslatedString("Playback & Controls"))
           }
           
           item {
             PreferenceCard {
               Preference(
 
-                title = { Text(text = stringResource(id = R.string.pref_player)) },
+                title = { Text(text = rememberTranslatedString(id = R.string.pref_player)) },
                 summary = { 
                   Text(
-                    text = stringResource(id = R.string.pref_player_summary),
+                    text = rememberTranslatedString(id = R.string.pref_player_summary),
                     color = MaterialTheme.colorScheme.outline
                   ) 
                 },
@@ -189,10 +191,10 @@ object PreferencesScreen : Screen {
               
               Preference(
 
-                title = { Text(text = stringResource(id = R.string.pref_gesture)) },
+                title = { Text(text = rememberTranslatedString(id = R.string.pref_gesture)) },
                 summary = { 
                   Text(
-                    text = stringResource(id = R.string.pref_gesture_summary),
+                    text = rememberTranslatedString(id = R.string.pref_gesture_summary),
                     color = MaterialTheme.colorScheme.outline
                   ) 
                 },
@@ -210,17 +212,17 @@ object PreferencesScreen : Screen {
           
           // File Management Section
           item {
-            PreferenceSectionHeader(title = "File Management")
+            PreferenceSectionHeader(title = rememberTranslatedString("File Management"))
           }
           
           item {
             PreferenceCard {
               Preference(
 
-                title = { Text(text = stringResource(id = R.string.pref_folders_title)) },
+                title = { Text(text = rememberTranslatedString(id = R.string.pref_folders_title)) },
                 summary = { 
                   Text(
-                    text = stringResource(id = R.string.pref_folders_summary),
+                    text = rememberTranslatedString(id = R.string.pref_folders_summary),
                     color = MaterialTheme.colorScheme.outline
                   ) 
                 },
@@ -236,19 +238,46 @@ object PreferencesScreen : Screen {
             }
           }
           
+          // Translation Section
+          item {
+            PreferenceSectionHeader(title = rememberTranslatedString("Translation"))
+          }
+
+          item {
+            PreferenceCard {
+              Preference(
+                title = { Text(rememberTranslatedString("Translation")) },
+                summary = {
+                  Text(
+                    rememberTranslatedString("Configure offline translation settings"),
+                    color = MaterialTheme.colorScheme.outline
+                  )
+                },
+                icon = {
+                  Icon(
+                    Icons.AutoMirrored.Outlined.TextSnippet,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                  )
+                },
+                onClick = { backstack.add(TranslationPreferencesScreen) },
+              )
+            }
+          }
+
           // Media Settings Section
           item {
-            PreferenceSectionHeader(title = "Media Settings")
+            PreferenceSectionHeader(title = rememberTranslatedString("Media Settings"))
           }
           
           item {
             PreferenceCard {
               Preference(
 
-                title = { Text(text = stringResource(id = R.string.pref_decoder)) },
+                title = { Text(text = rememberTranslatedString(id = R.string.pref_decoder)) },
                 summary = { 
                   Text(
-                    text = stringResource(id = R.string.pref_decoder_summary),
+                    text = rememberTranslatedString(id = R.string.pref_decoder_summary),
                     color = MaterialTheme.colorScheme.outline
                   ) 
                 },
@@ -266,10 +295,10 @@ object PreferencesScreen : Screen {
               
               Preference(
 
-                title = { Text(text = stringResource(id = R.string.pref_subtitles)) },
+                title = { Text(text = rememberTranslatedString(id = R.string.pref_subtitles)) },
                 summary = { 
                   Text(
-                    text = stringResource(id = R.string.pref_subtitles_summary),
+                    text = rememberTranslatedString(id = R.string.pref_subtitles_summary),
                     color = MaterialTheme.colorScheme.outline
                   ) 
                 },
@@ -287,10 +316,10 @@ object PreferencesScreen : Screen {
               
               Preference(
 
-                title = { Text(text = stringResource(id = R.string.pref_audio)) },
+                title = { Text(text = rememberTranslatedString(id = R.string.pref_audio)) },
                 summary = { 
                   Text(
-                    text = stringResource(id = R.string.pref_audio_summary),
+                    text = rememberTranslatedString(id = R.string.pref_audio_summary),
                     color = MaterialTheme.colorScheme.outline
                   ) 
                 },
@@ -308,17 +337,17 @@ object PreferencesScreen : Screen {
           
           // Advanced & About Section
           item {
-            PreferenceSectionHeader(title = "Advanced & About")
+            PreferenceSectionHeader(title = rememberTranslatedString("Advanced & About"))
           }
           
           item {
             PreferenceCard {
               Preference(
 
-                title = { Text(text = stringResource(R.string.pref_advanced)) },
+                title = { Text(text = rememberTranslatedString(R.string.pref_advanced)) },
                 summary = { 
                   Text(
-                    text = stringResource(id = R.string.pref_advanced_summary),
+                    text = rememberTranslatedString(id = R.string.pref_advanced_summary),
                     color = MaterialTheme.colorScheme.outline
                   ) 
                 },
@@ -336,10 +365,10 @@ object PreferencesScreen : Screen {
               
               Preference(
 
-                title = { Text(text = stringResource(id = R.string.pref_about_title)) },
+                title = { Text(text = rememberTranslatedString(id = R.string.pref_about_title)) },
                 summary = { 
                   Text(
-                    text = stringResource(id = R.string.pref_about_summary),
+                    text = rememberTranslatedString(id = R.string.pref_about_summary),
                     color = MaterialTheme.colorScheme.outline
                   ) 
                 },

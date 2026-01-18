@@ -71,6 +71,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
+import app.marlboroadvance.mpvex.ui.utils.rememberTranslatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
@@ -289,10 +290,10 @@ fun PlayerControls(
         val aspect by playerPreferences.videoAspect.collectAsState()
         val currentZoom by viewModel.videoZoom.collectAsState()
 
-        val rawMediaTitle by MPVLib.propString["media-title"].collectAsState()
-        val mediaTitle by remember(rawMediaTitle, activity) {
+        val vmMediaTitle by viewModel.mediaTitle.collectAsState()
+        val mediaTitle by remember(vmMediaTitle, activity) {
           derivedStateOf {
-            rawMediaTitle?.takeIf { it.isNotBlank() }
+            vmMediaTitle?.takeIf { it.isNotBlank() }
               ?: activity.getTitleForControls()
           }
         }
@@ -550,7 +551,7 @@ fun PlayerControls(
             gestureSeekAmount != null -> {
               val gs = gestureSeekAmount ?: Pair(0, 0)
               Text(
-                stringResource(
+                rememberTranslatedString(
                   R.string.player_gesture_seek_indicator,
                   if (gs.second >= 0) '+' else '-',
                   Utils.prettyTime(abs(gs.second)),

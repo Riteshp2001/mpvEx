@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import app.marlboroadvance.mpvex.ui.utils.rememberTranslatedString
 import app.marlboroadvance.mpvex.domain.media.model.VideoFolder
 import app.marlboroadvance.mpvex.preferences.AppearancePreferences
 import app.marlboroadvance.mpvex.preferences.BrowserPreferences
@@ -155,9 +156,13 @@ fun FolderCard(
 
         if (showTotalVideosChip && folder.videoCount > 0) {
           Text(
-            if (folder.videoCount == 1) "1 Video" else "${folder.videoCount} Videos",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme. onSurfaceVariant,
+            text = run {
+                val videoLabel = rememberTranslatedString("Video")
+                val videosLabel = rememberTranslatedString("Videos")
+                if (folder.videoCount == 1) "1 $videoLabel" else "${folder.videoCount} $videosLabel"
+            },
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
           )
         }
       }

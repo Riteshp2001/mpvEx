@@ -67,6 +67,7 @@ import app.marlboroadvance.mpvex.ui.browser.sheets.PlayLinkSheet
 import app.marlboroadvance.mpvex.ui.compose.LocalLazyGridState
 import app.marlboroadvance.mpvex.ui.compose.LocalLazyListState
 import app.marlboroadvance.mpvex.utils.media.MediaUtils
+import app.marlboroadvance.mpvex.ui.utils.rememberTranslatedString
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -261,7 +262,12 @@ object MainScreen : Screen {
     }
 
     // Define items for the navigation bar
-    val items = listOf("Folders", "Recent", "Playlist", "Network")
+    val items = listOf(
+        rememberTranslatedString("Folders"),
+        rememberTranslatedString("Recent"),
+        rememberTranslatedString("Playlist"),
+        rememberTranslatedString("Network")
+    )
     val selectedIcons = listOf(
         Icons.Filled.Folder, 
         Icons.Filled.History,
@@ -528,12 +534,12 @@ object MainScreen : Screen {
 
     androidx.compose.material3.AlertDialog(
       onDismissRequest = onDismiss,
-      title = { Text("Create Playlist") },
+      title = { Text(rememberTranslatedString("Create Playlist")) },
       text = {
         androidx.compose.material3.OutlinedTextField(
           value = playlistName,
           onValueChange = { playlistName = it },
-          label = { Text("Playlist Name") },
+          label = { Text(rememberTranslatedString("Playlist Name")) },
           singleLine = true,
           modifier = Modifier.fillMaxWidth(),
         )
@@ -547,12 +553,12 @@ object MainScreen : Screen {
           },
           enabled = playlistName.isNotBlank(),
         ) {
-          Text("Create")
+          Text(rememberTranslatedString("Create"))
         }
       },
       dismissButton = {
         androidx.compose.material3.TextButton(onClick = onDismiss) {
-          Text("Cancel")
+          Text(rememberTranslatedString("Cancel"))
         }
       },
     )
@@ -584,14 +590,14 @@ object MainScreen : Screen {
       } else {
         onDismiss
       },
-      title = { Text("Add M3U Playlist") },
+      title = { Text(rememberTranslatedString("Add M3U Playlist")) },
       text = {
         Column(
           modifier = Modifier.fillMaxWidth(),
           verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
           Text(
-            text = "Enter the URL of an M3U playlist file, or choose a local file",
+            text = rememberTranslatedString("Enter the URL of an M3U playlist file, or choose a local file"),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
           )
@@ -599,7 +605,7 @@ object MainScreen : Screen {
           OutlinedTextField(
             value = playlistUrl,
             onValueChange = { playlistUrl = it },
-            label = { Text("Playlist URL") },
+            label = { Text(rememberTranslatedString("Playlist URL")) },
             singleLine = false,
             maxLines = 3,
             modifier = Modifier.fillMaxWidth(),
@@ -614,7 +620,7 @@ object MainScreen : Screen {
           ) {
             HorizontalDivider(modifier = Modifier.weight(1f))
             Text(
-              text = "OR",
+              text = rememberTranslatedString("OR"),
               style = MaterialTheme.typography.labelSmall,
               color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -635,7 +641,7 @@ object MainScreen : Screen {
               modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Choose Local M3U File")
+            Text(rememberTranslatedString("Choose Local M3U File"))
           }
           
           if (isLoading) {
@@ -658,7 +664,7 @@ object MainScreen : Screen {
           },
           enabled = playlistUrl.isNotBlank() && !isLoading,
         ) {
-          Text("Add from URL")
+          Text(rememberTranslatedString("Add from URL"))
         }
       },
       dismissButton = {
@@ -666,7 +672,7 @@ object MainScreen : Screen {
           onClick = onDismiss,
           enabled = !isLoading
         ) {
-          Text("Cancel")
+          Text(rememberTranslatedString("Cancel"))
         }
       },
     )

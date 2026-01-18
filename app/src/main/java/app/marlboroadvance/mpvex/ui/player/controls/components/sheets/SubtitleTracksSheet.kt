@@ -17,7 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import app.marlboroadvance.mpvex.ui.utils.rememberTranslatedString
 import androidx.compose.ui.text.font.FontWeight
 import app.marlboroadvance.mpvex.R
 import app.marlboroadvance.mpvex.ui.player.TrackNode
@@ -41,7 +41,7 @@ fun SubtitlesSheet(
     onDismissRequest = onDismissRequest,
     header = {
       AddTrackRow(
-        stringResource(R.string.player_sheets_add_ext_sub),
+        rememberTranslatedString(R.string.player_sheets_add_ext_sub),
         onAddSubtitle,
         actions = {
           IconButton(onClick = onOpenSubtitleSettings) {

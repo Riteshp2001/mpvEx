@@ -45,6 +45,7 @@ androidx-documentfile = { group = "androidx.documentfile", name = "documentfile"
 seeker = "com.github.abdallahmehiz:seeker:2.0.1"
 material = "com.google.android.material:material:1.14.0-alpha08"
 mediainfo-lib = "com.github.marlboro-advance:mediainfoAndroid:v1.0.0-fix"
+mlkit-translate = "com.google.mlkit:translate:17.0.3"
 
 koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin" }
 koin-core = { module = "io.insert-koin:koin-core" }
@@ -60,6 +61,7 @@ room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 
 
 kotlinx-immutable-collections = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version = "0.4.0" }
+kotlinx-coroutines-play-services = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-play-services", version = "1.7.3" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 
 truetype-parser = { module = "io.github.yubyf:truetypeparser-light", version = "2.1.4" }
