@@ -50,8 +50,10 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.geometry.Size
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import app.marlboroadvance.mpvex.ui.player.controls.LocalPlayerButtonsClickEvent
 import app.marlboroadvance.mpvex.ui.theme.spacing
 import app.marlboroadvance.mpvex.preferences.SeekbarStyle
@@ -197,6 +199,24 @@ fun SeekbarWithTimers(
             isScrubbing = isUserInteracting,
             useWavySeekbar = false,
             seekbarStyle = SeekbarStyle.Simple, 
+            onSeek = { newPosition ->
+              if (!isUserInteracting) isUserInteracting = true
+              userPosition = newPosition
+              onValueChange(newPosition)
+            },
+            onSeekFinished = {
+              scope.launch { animatedPosition.snapTo(userPosition) }
+              isUserInteracting = false
+              onValueChangeFinished()
+            },
+          )
+        }
+        SeekbarStyle.Thick -> {
+          ThickSeekbar(
+            position = if (isUserInteracting) userPosition else animatedPosition.value,
+            duration = duration,
+            readAheadValue = readAheadValue,
+            chapters = chapters,
             onSeek = { newPosition ->
               if (!isUserInteracting) isUserInteracting = true
               userPosition = newPosition
@@ -730,6 +750,174 @@ fun StandardSeekbar(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ThickSeekbar(
+  position: Float,
+  duration: Float,
+  readAheadValue: Float,
+  chapters: ImmutableList<Segment>,
+  onSeek: (Float) -> Unit,
+  onSeekFinished: () -> Unit,
+  modifier: Modifier = Modifier,
+) {
+  val primaryColor = MaterialTheme.colorScheme.primary
+  val surfaceVariant = MaterialTheme.colorScheme.surfaceVariant
+  val interactionSource = remember { MutableInteractionSource() }
+  val trackHeight = 16.dp
+  val thumbWidth = 6.dp
+
+  Slider(
+    value = position,
+    onValueChange = onSeek,
+    onValueChangeFinished = onSeekFinished,
+    valueRange = 0f..duration.coerceAtLeast(0.1f),
+    modifier = modifier.fillMaxWidth(),
+    interactionSource = interactionSource,
+    track = { sliderState ->
+      Canvas(
+        modifier = Modifier
+          .fillMaxWidth()
+          .height(trackHeight),
+      ) {
+        val min = sliderState.valueRange.start
+        val max = sliderState.valueRange.endInclusive
+        val range = (max - min).takeIf { it > 0f } ?: 1f
+
+        val playedFraction = ((sliderState.value - min) / range).coerceIn(0f, 1f)
+        val playedPx = size.width * playedFraction
+        val trackHeightPx = size.height
+        val outerRadius = trackHeightPx / 2f  // For bar ends and thumb edges
+        
+        // Gap around thumb (14dp total)
+        val thumbGapSize = 14.dp.toPx()
+        val gapHalf = thumbGapSize / 2f
+        val thumbGapStart = (playedPx - gapHalf).coerceAtLeast(0f)
+        val thumbGapEnd = (playedPx + gapHalf).coerceAtMost(size.width)
+        
+        // Chapter gap configuration
+        val chapterGapWidth = 3.dp.toPx()
+        val chapterGaps = chapters
+          .map { (it.start / duration).coerceIn(0f, 1f) * size.width }
+          .filter { it > chapterGapWidth && it < size.width - chapterGapWidth }
+          .map { pos -> (pos - chapterGapWidth / 2f) to (pos + chapterGapWidth / 2f) }
+
+        // Helper to draw a segment with conditional rounding
+        fun drawSegment(
+          startX: Float, 
+          endX: Float, 
+          color: Color,
+          roundLeft: Boolean,
+          roundRight: Boolean
+        ) {
+          if (endX - startX < 0.5f) return
+          
+          val leftRadius = if (roundLeft) outerRadius else 0f
+          val rightRadius = if (roundRight) outerRadius else 0f
+          
+          val path = Path()
+          path.addRoundRect(
+            androidx.compose.ui.geometry.RoundRect(
+              left = startX,
+              top = 0f,
+              right = endX,
+              bottom = trackHeightPx,
+              topLeftCornerRadius = androidx.compose.ui.geometry.CornerRadius(leftRadius),
+              bottomLeftCornerRadius = androidx.compose.ui.geometry.CornerRadius(leftRadius),
+              topRightCornerRadius = androidx.compose.ui.geometry.CornerRadius(rightRadius),
+              bottomRightCornerRadius = androidx.compose.ui.geometry.CornerRadius(rightRadius)
+            )
+          )
+          drawPath(path, color)
+        }
+
+        // Draw played portion (from 0 to thumbGapStart) with chapter gaps
+        if (thumbGapStart > 0) {
+          val playedChapterGaps = chapterGaps.filter { it.second < thumbGapStart }
+          var currentPos = 0f
+          
+          for ((gStart, gEnd) in playedChapterGaps) {
+            if (gStart > currentPos) {
+              val isAtBarStart = currentPos <= 0.5f
+              val isNextToThumbLeft = kotlin.math.abs(gStart - thumbGapStart) < 1f
+              drawSegment(currentPos, gStart, primaryColor, isAtBarStart, isNextToThumbLeft)
+            }
+            currentPos = gEnd
+          }
+          
+          // Draw remaining played portion to thumb gap
+          if (currentPos < thumbGapStart) {
+            val isAtBarStart = currentPos <= 0.5f
+            val isNextToThumb = true  // Right edge is always adjacent to thumb
+            drawSegment(currentPos, thumbGapStart, primaryColor, isAtBarStart, isNextToThumb)
+          }
+        }
+
+        // Calculate read-ahead fraction
+        val readAheadFraction = ((readAheadValue - min) / range).coerceIn(0f, 1f)
+        val readAheadPx = (size.width * readAheadFraction).coerceAtLeast(playedPx)
+        
+        // Read-ahead color (faint primary/white)
+        val readAheadColor = primaryColor.copy(alpha = 0.35f)
+        
+        // Draw read-ahead portion (from thumbGapEnd to readAhead position) with chapter gaps
+        if (thumbGapEnd < readAheadPx) {
+          val readAheadChapterGaps = chapterGaps.filter { it.first > thumbGapEnd && it.second < readAheadPx }
+          var currentPos = thumbGapEnd
+          
+          for ((gStart, gEnd) in readAheadChapterGaps) {
+            if (gStart > currentPos) {
+              val isNextToThumbRight = kotlin.math.abs(currentPos - thumbGapEnd) < 1f
+              val isBeforeChapter = true
+              drawSegment(currentPos, gStart, readAheadColor, isNextToThumbRight, false)
+            }
+            currentPos = gEnd
+          }
+          
+          // Draw remaining read-ahead portion
+          if (currentPos < readAheadPx) {
+            val isNextToThumb = kotlin.math.abs(currentPos - thumbGapEnd) < 1f
+            val isAtReadAheadEnd = readAheadPx >= size.width - 1f
+            drawSegment(currentPos, readAheadPx, readAheadColor, isNextToThumb, isAtReadAheadEnd)
+          }
+        }
+
+        // Draw unplayed portion (from readAheadPx to end) with chapter gaps
+        if (readAheadPx < size.width) {
+          val unplayedStart = readAheadPx.coerceAtLeast(thumbGapEnd)
+          val unplayedChapterGaps = chapterGaps.filter { it.first > unplayedStart }
+          var currentPos = unplayedStart
+          
+          for ((gStart, gEnd) in unplayedChapterGaps) {
+            if (gStart > currentPos) {
+              val isNextToReadAhead = kotlin.math.abs(currentPos - readAheadPx) < 1f
+              val isAtBarEnd = kotlin.math.abs(gStart - size.width) < 1f
+              drawSegment(currentPos, gStart, surfaceVariant.copy(alpha = 0.4f), isNextToReadAhead, isAtBarEnd)
+            }
+            currentPos = gEnd
+          }
+          
+          // Draw remaining unplayed portion to end
+          if (currentPos < size.width) {
+            val isNextToReadAhead = kotlin.math.abs(currentPos - readAheadPx) < 1f || kotlin.math.abs(currentPos - thumbGapEnd) < 1f
+            val isAtBarEnd = true  // Right edge is at bar end
+            drawSegment(currentPos, size.width, surfaceVariant.copy(alpha = 0.4f), isNextToReadAhead, isAtBarEnd)
+          }
+        }
+      }
+    },
+    thumb = {
+      // Thin vertical line thumb matching track height with rounded corners
+      Box(
+        modifier = Modifier
+          .width(thumbWidth)
+          .height(trackHeight)
+          .background(primaryColor, RoundedCornerShape(thumbWidth / 2))
+      )
+    }
+  )
+}
+
 
 @Preview
 @Composable
@@ -752,6 +940,7 @@ private fun PreviewSeekBar() {
 fun SeekbarPreview(
   style: SeekbarStyle,
   modifier: Modifier = Modifier,
+  onClick: (() -> Unit)? = null,
 ) {
   val infiniteTransition = rememberInfiniteTransition(label = "seekbar_preview")
   val progress by infiniteTransition.animateFloat(
@@ -766,63 +955,95 @@ fun SeekbarPreview(
   val duration = 100f
   val position = progress * duration
 
+  // Dummy chapters for preview to visualize chapter separation
+  val dummyChapters = persistentListOf(
+    Segment(name = "Chapter 1", start = 0f),
+    Segment(name = "Chapter 2", start = duration * 0.35f),
+    Segment(name = "Chapter 3", start = duration * 0.65f),
+  )
+  
   Box(
-    modifier = modifier.height(32.dp),
+    modifier = modifier
+      .height(32.dp),
     contentAlignment = Alignment.Center
   ) {
-      when (style) {
-        SeekbarStyle.Standard -> {
-          StandardSeekbar(
-            position = position,
-            duration = duration,
-            readAheadValue = position,
-            chapters = persistentListOf(),
-            onSeek = {},
-            onSeekFinished = {},
-          )
-        }
-        SeekbarStyle.Wavy -> {
-          SquigglySeekbar(
-            position = position,
-            duration = duration,
-            readAheadValue = position,
-            chapters = persistentListOf(),
-            isPaused = false,
-            isScrubbing = false,
-            useWavySeekbar = true,
-            seekbarStyle = SeekbarStyle.Wavy,
-            onSeek = {},
-            onSeekFinished = {},
-          )
-        }
-        SeekbarStyle.Circular -> {
-          SquigglySeekbar(
-            position = position,
-            duration = duration,
-            readAheadValue = position,
-            chapters = persistentListOf(),
-            isPaused = false,
-            isScrubbing = false,
-            useWavySeekbar = true,
-            seekbarStyle = SeekbarStyle.Circular,
-            onSeek = {},
-            onSeekFinished = {},
-          )
-        }
-        SeekbarStyle.Simple -> {
-             SquigglySeekbar(
-            position = position,
-            duration = duration,
-            readAheadValue = position,
-            chapters = persistentListOf(),
-            isPaused = false,
-            isScrubbing = false,
-            useWavySeekbar = false,
-            seekbarStyle = SeekbarStyle.Simple,
-            onSeek = {},
-            onSeekFinished = {},
-          )
-        }
+    // Seekbar content
+    when (style) {
+      SeekbarStyle.Standard -> {
+        StandardSeekbar(
+          position = position,
+          duration = duration,
+          readAheadValue = position,
+          chapters = dummyChapters,
+          onSeek = {},
+          onSeekFinished = {},
+        )
       }
+      SeekbarStyle.Wavy -> {
+        SquigglySeekbar(
+          position = position,
+          duration = duration,
+          readAheadValue = position,
+          chapters = dummyChapters,
+          isPaused = false,
+          isScrubbing = false,
+          useWavySeekbar = true,
+          seekbarStyle = SeekbarStyle.Wavy,
+          onSeek = {},
+          onSeekFinished = {},
+        )
+      }
+      SeekbarStyle.Circular -> {
+        SquigglySeekbar(
+          position = position,
+          duration = duration,
+          readAheadValue = position,
+          chapters = dummyChapters,
+          isPaused = false,
+          isScrubbing = false,
+          useWavySeekbar = true,
+          seekbarStyle = SeekbarStyle.Circular,
+          onSeek = {},
+          onSeekFinished = {},
+        )
+      }
+      SeekbarStyle.Simple -> {
+           SquigglySeekbar(
+          position = position,
+          duration = duration,
+          readAheadValue = position,
+          chapters = dummyChapters,
+          isPaused = false,
+          isScrubbing = false,
+          useWavySeekbar = false,
+          seekbarStyle = SeekbarStyle.Simple,
+          onSeek = {},
+          onSeekFinished = {},
+        )
+      }
+      SeekbarStyle.Thick -> {
+        ThickSeekbar(
+          position = position,
+          duration = duration,
+          readAheadValue = position,
+          chapters = dummyChapters,
+          onSeek = {},
+          onSeekFinished = {},
+        )
+      }
+    }
+    
+    // Invisible overlay that intercepts all touch events and triggers onClick
+    if (onClick != null) {
+      Box(
+        modifier = Modifier
+          .matchParentSize()
+          .clickable(
+            interactionSource = remember { MutableInteractionSource() },
+            indication = null, // No ripple on overlay itself
+            onClick = onClick
+          )
+      )
+    }
   }
 }
