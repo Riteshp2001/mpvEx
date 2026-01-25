@@ -186,6 +186,7 @@ dependencies {
   implementation(libs.seeker)
   implementation(libs.compose.prefs)
   implementation(libs.aboutlibraries.compose.m3)
+  implementation("com.github.kyant:backdrop:1.0.4")
 
   implementation(libs.accompanist.permissions)
 
