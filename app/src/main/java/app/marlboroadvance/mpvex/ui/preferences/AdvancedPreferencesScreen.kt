@@ -222,7 +222,23 @@ object AdvancedPreferencesScreen : Screen {
           }
           
           item {
-            PreferenceCard {
+             PreferenceCard {
+              val enableLiquidGlass by preferences.enableLiquidGlass.collectAsState()
+              
+              SwitchPreference(
+                value = enableLiquidGlass,
+                onValueChange = preferences.enableLiquidGlass::set,
+                title = { Text("Enable Liquid Glass") },
+                summary = { 
+                  Text(
+                    "Show 'Liquid' style in Appearance settings (requires app restart)",
+                    color = MaterialTheme.colorScheme.outline,
+                  ) 
+                },
+              )
+              
+              PreferenceDivider()
+
               Preference(
                 title = { Text(text = "Export Settings") },
                 summary = { 

@@ -192,9 +192,14 @@ object PlayerControlsPreferencesScreen : Screen {
 
           item {
             val seekbarStyle by appearancePrefs.seekbarStyle.collectAsState()
+            val enableLiquidGlass by appearancePrefs.enableLiquidGlass.collectAsState()
             
             PreferenceCard {
-              SeekbarStyle.entries.forEachIndexed { index, style ->
+              val styles = SeekbarStyle.entries.filter { 
+                  it != SeekbarStyle.Liquid || enableLiquidGlass 
+              }
+              
+              styles.forEachIndexed { index, style ->
                 ListItem(
                   headlineContent = {
                     Text(text = style.name)
@@ -217,7 +222,7 @@ object PlayerControlsPreferencesScreen : Screen {
                   modifier = Modifier
                     .clickable { appearancePrefs.seekbarStyle.set(style) }
                 )
-                if (index < SeekbarStyle.entries.size - 1) {
+                if (index < styles.size - 1) {
                   PreferenceDivider()
                 }
               }

@@ -12,12 +12,18 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
+import androidx.compose.animation.core.updateTransition
+import androidx.compose.animation.core.animateDp
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.MaterialTheme
@@ -46,6 +52,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -63,6 +70,16 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import com.kyant.backdrop.Backdrop
+import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.effects.vibrancy
+import com.kyant.backdrop.backdrops.rememberCombinedBackdrop
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.foundation.layout.size
 
 @Composable
 fun SeekbarWithTimers(
@@ -229,6 +246,25 @@ fun SeekbarWithTimers(
               onValueChangeFinished()
             },
           )
+        }
+        SeekbarStyle.Liquid -> {
+            LiquidSlider(
+                position = if (isUserInteracting) userPosition else animatedPosition.value,
+                duration = duration,
+                readAheadValue = readAheadValue,
+                chapters = chapters,
+                onSeek = { newPosition ->
+                    if (!isUserInteracting) isUserInteracting = true
+                    userPosition = newPosition
+                    onValueChange(newPosition)
+                },
+                onSeekFinished = {
+                    scope.launch { animatedPosition.snapTo(userPosition) }
+                    isUserInteracting = false
+                    onValueChangeFinished()
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
         }
       }
     }
@@ -846,6 +882,17 @@ fun SeekbarPreview(
           onSeekFinished = {},
         )
       }
+      SeekbarStyle.Liquid -> {
+          LiquidSlider(
+              position = position,
+              duration = duration,
+              readAheadValue = position,
+              chapters = dummyChapters,
+              onSeek = {},
+              onSeekFinished = {},
+              modifier = Modifier.fillMaxWidth()
+          )
+      }
     }
     
     // Invisible overlay that intercepts all touch events and triggers onClick
@@ -861,4 +908,219 @@ fun SeekbarPreview(
       )
     }
   }
+}
+
+@Composable
+fun LiquidSlider(
+    position: Float,
+    duration: Float,
+    readAheadValue: Float,
+    chapters: ImmutableList<Segment>,
+    onSeek: (Float) -> Unit,
+    onSeekFinished: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val trackHeight = 6.dp
+    val trackBackdrop = rememberLayerBackdrop()
+    
+    // Track interaction state
+    var isInteracting by remember { mutableStateOf(false) }
+    
+    // Spring animated press progress (0 = idle, 1 = fully pressed)
+    val pressProgress = remember { Animatable(0f) }
+    
+    LaunchedEffect(isInteracting) {
+        val targetValue = if (isInteracting) 1f else 0f
+        pressProgress.animateTo(
+            targetValue,
+            animationSpec = androidx.compose.animation.core.spring(
+                dampingRatio = 0.5f,
+                stiffness = 300f
+            )
+        )
+    }
+    
+    val progress = pressProgress.value
+    val scale = androidx.compose.ui.util.lerp(1f, 1.5f, progress)
+
+    BoxWithConstraints(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(32.dp),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        val trackWidthPx = constraints.maxWidth.toFloat()
+        val valueRange = 0f..duration.coerceAtLeast(0.1f)
+        val range = valueRange.endInclusive - valueRange.start
+        val currentProgress = if (range > 0f) ((position - valueRange.start) / range).coerceIn(0f, 1f) else 0f
+        val readAheadProgress = if (range > 0f) ((readAheadValue - valueRange.start) / range).coerceIn(0f, 1f) else 0f
+
+        // Track with gesture handling
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(trackHeight)
+                .align(Alignment.Center)
+                .layerBackdrop(trackBackdrop)
+                .pointerInput(Unit) {
+                    detectTapGestures { offset ->
+                        val fraction = (offset.x / trackWidthPx).coerceIn(0f, 1f)
+                        val newValue = valueRange.start + fraction * range
+                        onSeek(newValue)
+                        onSeekFinished()
+                    }
+                }
+                .pointerInput(Unit) {
+                    detectDragGestures(
+                        onDragStart = { isInteracting = true },
+                        onDragEnd = {
+                            isInteracting = false
+                            onSeekFinished()
+                        },
+                        onDragCancel = { isInteracting = false },
+                        onDrag = { change, _ ->
+                            change.consume()
+                            val fraction = (change.position.x / trackWidthPx).coerceIn(0f, 1f)
+                            val newValue = valueRange.start + fraction * range
+                            onSeek(newValue)
+                        }
+                    )
+                }
+        ) {
+            // Liquid Rail Drawing with Chapter Gaps
+            Canvas(modifier = Modifier.matchParentSize()) {
+                val width = size.width
+                val trackCornerRadius = size.height / 2f
+                
+                val gapWidth = 2.dp.toPx()
+                val gapHalf = gapWidth / 2f
+                
+                // Calculate gaps relative to width
+                val chapterGaps = chapters
+                    .map { (it.start / duration).coerceIn(0f, 1f) * width }
+                    .filter { it > 0f && it < width }
+                    .map { x -> (x - gapHalf) to (x + gapHalf) }
+
+                // Helper to draw segments avoiding gaps
+                fun drawRailWithGaps(endFraction: Float, color: Color) {
+                    val endPx = endFraction * width
+                    if (endPx <= 0f) return
+
+                    val relevantGaps = chapterGaps
+                        .filter { (gStart, _) -> gStart < endPx }
+                        .sortedBy { it.first }
+
+                    var currentPos = 0f
+                    
+                    for ((gStart, gEnd) in relevantGaps) {
+                        val segmentEnd = gStart.coerceAtMost(endPx)
+                        if (segmentEnd > currentPos) {
+                            val isAtStart = currentPos <= 0.1f
+                            val topLeftRadius = if (isAtStart) androidx.compose.ui.geometry.CornerRadius(trackCornerRadius) else androidx.compose.ui.geometry.CornerRadius.Zero
+                            val bottomLeftRadius = if (isAtStart) androidx.compose.ui.geometry.CornerRadius(trackCornerRadius) else androidx.compose.ui.geometry.CornerRadius.Zero
+                            
+                            val path = Path().apply {
+                                addRoundRect(
+                                    androidx.compose.ui.geometry.RoundRect(
+                                        left = currentPos,
+                                        top = 0f,
+                                        right = segmentEnd,
+                                        bottom = size.height,
+                                        topLeftCornerRadius = topLeftRadius,
+                                        bottomLeftCornerRadius = bottomLeftRadius,
+                                        topRightCornerRadius = androidx.compose.ui.geometry.CornerRadius.Zero,
+                                        bottomRightCornerRadius = androidx.compose.ui.geometry.CornerRadius.Zero
+                                    )
+                                )
+                            }
+                            drawPath(path, color)
+                        }
+                        currentPos = gEnd
+                        if (currentPos >= endPx) break
+                    }
+                    
+                    // Final segment
+                    if (currentPos < endPx) {
+                        val isAtStart = currentPos <= 0.1f
+                        val topLeftRadius = if (isAtStart) androidx.compose.ui.geometry.CornerRadius(trackCornerRadius) else androidx.compose.ui.geometry.CornerRadius.Zero
+                        val bottomLeftRadius = if (isAtStart) androidx.compose.ui.geometry.CornerRadius(trackCornerRadius) else androidx.compose.ui.geometry.CornerRadius.Zero
+                        
+                        val path = Path().apply {
+                            addRoundRect(
+                                androidx.compose.ui.geometry.RoundRect(
+                                    left = currentPos,
+                                    top = 0f,
+                                    right = endPx,
+                                    bottom = size.height,
+                                    topLeftCornerRadius = topLeftRadius,
+                                    bottomLeftCornerRadius = bottomLeftRadius,
+                                    topRightCornerRadius = androidx.compose.ui.geometry.CornerRadius(trackCornerRadius),
+                                    bottomRightCornerRadius = androidx.compose.ui.geometry.CornerRadius(trackCornerRadius)
+                                )
+                            )
+                        }
+                        drawPath(path, color)
+                    }
+                }
+
+                // 1. Background rail
+                drawRailWithGaps(1f, Color.White.copy(alpha = 0.2f))
+
+                // 2. Buffer rail
+                if (readAheadProgress > currentProgress) {
+                    drawRailWithGaps(readAheadProgress, Color.White.copy(alpha = 0.4f))
+                }
+
+                // 3. Active rail
+                if (currentProgress > 0) {
+                    drawRailWithGaps(currentProgress, Color(0xFF0088FF).copy(alpha = 0.9f))
+                }
+            }
+        }
+
+        // Thumb visuals
+        // Idle: Small solid white pill (18x10.dp)
+        // Pressed: Large glass lens (28x18.dp)
+        val currentThumbWidth = androidx.compose.ui.unit.lerp(18.dp, 28.dp, progress)
+        val currentThumbHeight = androidx.compose.ui.unit.lerp(10.dp, 18.dp, progress)
+        
+        // Center thumb exactly on the progress
+        val density = LocalDensity.current
+        val thumbOffsetX = with(density) { (trackWidthPx * currentProgress).toDp() - (currentThumbWidth / 2) }
+        
+        Box(
+            modifier = Modifier
+                .offset(x = thumbOffsetX)
+                .align(Alignment.CenterStart)
+                .drawBackdrop(
+                    backdrop = trackBackdrop,
+                    shape = { CircleShape },
+                    effects = {
+                        // Glass effect only appears when pressed
+                        // Blur increases with press (0 -> 4dp)
+                        blur(4.dp.toPx() * progress)
+                        
+                        // Lens effect increases with press
+                        lens(
+                            refractionHeight = 8f.dp.toPx() * progress,
+                            refractionAmount = 10f.dp.toPx() * progress,
+                            chromaticAberration = true
+                        )
+                    },
+                    layerBlock = {
+                        // Scale is handled by size animation, but we can add subtle pop
+                        scaleX = scale
+                        scaleY = scale
+                    },
+                    onDrawSurface = {
+                        // Solid white at idle (1.0), Fades to transparent at pressed (0.0)
+                        drawRect(Color.White.copy(alpha = 1f - progress))
+                    }
+                )
+                .size(currentThumbWidth, currentThumbHeight)
+                .pointerInput(Unit) {
+                          // No gesture handler here, handled by track
+                }
+        )
+    }
 }
