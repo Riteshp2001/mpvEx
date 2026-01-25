@@ -39,6 +39,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -58,11 +60,42 @@ import app.marlboroadvance.mpvex.ui.player.controls.LocalPlayerButtonsClickEvent
 import app.marlboroadvance.mpvex.ui.theme.spacing
 import app.marlboroadvance.mpvex.preferences.SeekbarStyle
 import dev.vivvvek.seeker.Segment
+
 import `is`.xyz.mpv.Utils
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
+import app.marlboroadvance.mpvex.preferences.AdvancedPreferences
+import app.marlboroadvance.mpvex.preferences.preference.collectAsState
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.util.fastCoerceIn
+import androidx.compose.ui.util.fastRoundToInt
+import androidx.compose.ui.util.lerp
+import app.marlboroadvance.mpvex.ui.liquidglass.Backdrop
+import app.marlboroadvance.mpvex.ui.liquidglass.backdrops.layerBackdrop
+import app.marlboroadvance.mpvex.ui.liquidglass.backdrops.rememberBackdrop
+import app.marlboroadvance.mpvex.ui.liquidglass.backdrops.rememberCombinedBackdrop
+import app.marlboroadvance.mpvex.ui.liquidglass.backdrops.rememberLayerBackdrop
+import app.marlboroadvance.mpvex.ui.liquidglass.drawBackdrop
+import app.marlboroadvance.mpvex.ui.liquidglass.effects.blur
+import app.marlboroadvance.mpvex.ui.liquidglass.effects.lens
+import app.marlboroadvance.mpvex.ui.liquidglass.highlight.Highlight
+import app.marlboroadvance.mpvex.ui.liquidglass.shadow.InnerShadow
+import app.marlboroadvance.mpvex.ui.liquidglass.shadow.Shadow
+import app.marlboroadvance.mpvex.ui.liquidglass.util.DampedDragAnimation
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.unit.Dp
 
 @Composable
 fun SeekbarWithTimers(
@@ -126,7 +159,15 @@ fun SeekbarWithTimers(
           .height(48.dp),
       contentAlignment = Alignment.Center,
     ) {
-      when (seekbarStyle) {
+      val advancedPreferences = koinInject<AdvancedPreferences>()
+      val enableLiquidGlass by advancedPreferences.enableLiquidGlass.collectAsState()
+      val effectiveStyle = if (seekbarStyle == SeekbarStyle.Liquid && !enableLiquidGlass) {
+        SeekbarStyle.Standard
+      } else {
+        seekbarStyle
+      }
+
+      when (effectiveStyle) {
         SeekbarStyle.Standard -> {
           StandardSeekbar(
             position = if (isUserInteracting) userPosition else animatedPosition.value,
@@ -228,6 +269,22 @@ fun SeekbarWithTimers(
               isUserInteracting = false
               onValueChangeFinished()
             },
+          )
+        }
+        SeekbarStyle.Liquid -> {
+          LiquidSlider(
+            value = if (isUserInteracting) userPosition else animatedPosition.value,
+            onValueChange = { newPosition ->
+              if (!isUserInteracting) isUserInteracting = true
+              userPosition = newPosition
+              onValueChange(newPosition)
+            },
+            onValueChangeFinished = onValueChangeFinished,
+            valueRange = 0f..duration.coerceAtLeast(0.1f),
+            readAheadValue = readAheadValue,
+            chapters = chapters.map { it.start },
+            backdrop = app.marlboroadvance.mpvex.ui.liquidglass.backdrops.emptyBackdrop(),
+            modifier = Modifier.fillMaxWidth().height(48.dp)
           )
         }
       }
@@ -648,22 +705,22 @@ fun StandardSeekbar(
                     val isInnerLeft = kotlin.math.abs(startX - thumbGapEnd) < 0.5f
                     
                     val cornerRadiusLeft = when {
-                        isOuterLeft -> androidx.compose.ui.geometry.CornerRadius(outerRadius)
-                        isInnerLeft -> androidx.compose.ui.geometry.CornerRadius(innerRadius)
-                        else -> androidx.compose.ui.geometry.CornerRadius.Zero
+                        isOuterLeft -> CornerRadius(outerRadius)
+                        isInnerLeft -> CornerRadius(innerRadius)
+                        else -> CornerRadius.Zero
                     }
 
                     val isOuterRight = endX >= size.width - 0.5f
                     val isInnerRight = kotlin.math.abs(endX - thumbGapStart) < 0.5f
 
                     val cornerRadiusRight = when {
-                        isOuterRight -> androidx.compose.ui.geometry.CornerRadius(outerRadius)
-                        isInnerRight -> androidx.compose.ui.geometry.CornerRadius(innerRadius)
-                        else -> androidx.compose.ui.geometry.CornerRadius.Zero
+                        isOuterRight -> CornerRadius(outerRadius)
+                        isInnerRight -> CornerRadius(innerRadius)
+                        else -> CornerRadius.Zero
                     }
                     
                     path.addRoundRect(
-                        androidx.compose.ui.geometry.RoundRect(
+                        RoundRect(
                             left = startX,
                             top = 0f,
                             right = endX,
@@ -726,23 +783,6 @@ fun StandardSeekbar(
     )
 }
 
-@Preview
-@Composable
-private fun PreviewSeekBar() {
-  SeekbarWithTimers(
-    position = 30f,
-    duration = 180f,
-    onValueChange = {},
-    onValueChangeFinished = {},
-    timersInverted = Pair(false, true),
-    positionTimerOnClick = {},
-    durationTimerOnCLick = {},
-    chapters = persistentListOf(),
-    paused = false,
-    readAheadValue = 90f,
-  )
-}
-
 @Composable
 fun SeekbarPreview(
   style: SeekbarStyle,
@@ -775,7 +815,15 @@ fun SeekbarPreview(
     contentAlignment = Alignment.Center
   ) {
     // Seekbar content
-    when (style) {
+    val advancedPreferences = koinInject<AdvancedPreferences>()
+    val enableLiquidGlass by advancedPreferences.enableLiquidGlass.collectAsState()
+    val effectiveStyle = if (style == SeekbarStyle.Liquid && !enableLiquidGlass) {
+      SeekbarStyle.Standard
+    } else {
+      style
+    }
+
+    when (effectiveStyle) {
       SeekbarStyle.Standard -> {
         StandardSeekbar(
           position = position,
@@ -846,6 +894,17 @@ fun SeekbarPreview(
           onSeekFinished = {},
         )
       }
+      SeekbarStyle.Liquid -> {
+        LiquidSlider(
+          value = position,
+          onValueChange = {},
+          valueRange = 0f..duration,
+          readAheadValue = position, // Simulate full buffer matching position for preview
+          chapters = dummyChapters.map { it.start },
+          backdrop = app.marlboroadvance.mpvex.ui.liquidglass.backdrops.emptyBackdrop(),
+          modifier = Modifier.fillMaxWidth().height(32.dp)
+        )
+      }
     }
     
     // Invisible overlay that intercepts all touch events and triggers onClick
@@ -861,4 +920,274 @@ fun SeekbarPreview(
       )
     }
   }
+}
+
+private val ContinuousCapsule = RoundedCornerShape(50)
+
+@Composable
+fun LiquidSlider(
+    value: Float,
+    onValueChange: (Float) -> Unit,
+    onValueChangeFinished: (() -> Unit)? = null,
+    valueRange: ClosedFloatingPointRange<Float>,
+    readAheadValue: Float = 0f,
+    chapters: List<Float> = emptyList(),
+    visibilityThreshold: Float = 0.001f,
+    backdrop: Backdrop,
+    modifier: Modifier = Modifier
+) {
+    val isLightTheme = !isSystemInDarkTheme()
+    val accentColor =
+        if (isLightTheme) Color(0xFF0088FF)
+        else Color(0xFF0091FF)
+    val trackColor =
+        if (isLightTheme) Color(0xFF787878).copy(0.2f)
+        else Color(0xFF787880).copy(0.36f)
+    val bufferColor =
+        if (isLightTheme) Color(0xFF787878).copy(0.4f)
+        else Color(0xFF787880).copy(0.5f)
+
+    val trackBackdrop = rememberLayerBackdrop()
+
+    BoxWithConstraints(
+        modifier.fillMaxWidth(),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        val trackWidth = constraints.maxWidth
+
+        val isLtr = LocalLayoutDirection.current == LayoutDirection.Ltr
+        val animationScope = rememberCoroutineScope()
+        var didDrag by remember { mutableStateOf(false) }
+        val dampedDragAnimation = remember(animationScope) {
+            DampedDragAnimation(
+                animationScope = animationScope,
+                initialValue = value,
+                valueRange = valueRange,
+                visibilityThreshold = visibilityThreshold,
+                initialScale = 1f,
+                pressedScale = 1.5f,
+                onDragStarted = {},
+                onDragStopped = {
+                    if (didDrag) {
+                        onValueChange(targetValue)
+                    }
+                },
+                onDrag = { _, dragAmount ->
+                    if (!didDrag) {
+                        didDrag = dragAmount.x != 0f
+                    }
+                    val delta = (valueRange.endInclusive - valueRange.start) * (dragAmount.x / trackWidth)
+                    onValueChange(
+                        if (isLtr) (targetValue + delta).coerceIn(valueRange)
+                        else (targetValue - delta).coerceIn(valueRange)
+                    )
+                }
+            )
+        }
+        
+        // Update animation when value changes externally
+        LaunchedEffect(value) {
+             if (dampedDragAnimation.targetValue != value) {
+                 dampedDragAnimation.updateValue(value)
+             }
+        }
+
+        Box(Modifier.layerBackdrop(trackBackdrop)) {
+            
+            // Helper to draw segments with gaps
+            fun androidx.compose.ui.graphics.drawscope.DrawScope.drawSegments(
+                color: Color,
+                width: Float,
+                height: Float,
+                totalTrackWidth: Float
+            ) {
+                 val gapSize = 2.dp.toPx()
+                 val range = (valueRange.endInclusive - valueRange.start).coerceAtLeast(0.001f)
+                 
+                 if (chapters.isEmpty()) {
+                     drawRect(color = color, size = androidx.compose.ui.geometry.Size(width, height))
+                 } else {
+                     val chapterPositions = chapters
+                         .map { (it - valueRange.start) / range * totalTrackWidth }
+                         .filter { it > 0f && it < totalTrackWidth }
+                         .sorted()
+                         
+                     var currentX = 0f
+                     chapterPositions.forEach { pos ->
+                         val gapStart = pos - gapSize / 2
+                         val gapEnd = pos + gapSize / 2
+                         
+                         // Draw up to gap start
+                         if (gapStart > currentX) {
+                             val segmentEnd = gapStart.coerceAtMost(width)
+                             if (segmentEnd > currentX) {
+                                 drawRect(
+                                     color = color,
+                                     topLeft = androidx.compose.ui.geometry.Offset(currentX, 0f),
+                                     size = androidx.compose.ui.geometry.Size(segmentEnd - currentX, height)
+                                 )
+                             }
+                         }
+                         currentX = gapEnd
+                     }
+                     
+                     // Draw remaining segment
+                     if (currentX < width) {
+                         drawRect(
+                             color = color,
+                             topLeft = androidx.compose.ui.geometry.Offset(currentX, 0f),
+                             size = androidx.compose.ui.geometry.Size(width - currentX, height)
+                         )
+                     }
+                 }
+            }
+
+            // Track with Chapter Gaps
+            androidx.compose.foundation.Canvas(
+                Modifier
+                    .clip(ContinuousCapsule)
+                    .height(6f.dp)
+                    .fillMaxWidth()
+                    .pointerInput(animationScope) {
+                        detectTapGestures { position ->
+                            val delta = (valueRange.endInclusive - valueRange.start) * (position.x / trackWidth)
+                            val targetValue =
+                                (if (isLtr) valueRange.start + delta
+                                else valueRange.endInclusive - delta)
+                                    .coerceIn(valueRange)
+                            dampedDragAnimation.animateToValue(targetValue)
+                            onValueChange(targetValue)
+                            onValueChangeFinished?.invoke()
+                        }
+                    }
+            ) {
+                drawSegments(trackColor, size.width, size.height, size.width)
+            }
+
+            // Buffer / Read-ahead Bar
+            if (readAheadValue > valueRange.start) {
+                val bufferProgress = ((readAheadValue - valueRange.start) / (valueRange.endInclusive - valueRange.start)).coerceIn(0f, 1f)
+                androidx.compose.foundation.Canvas(
+                    Modifier
+                        .clip(ContinuousCapsule)
+                        .height(6f.dp)
+                        .fillMaxWidth()
+                ) {
+                    drawSegments(bufferColor, size.width * bufferProgress, size.height, size.width)
+                }
+            }
+            
+            // Filled Progress Bar (Accent)
+            androidx.compose.foundation.Canvas(
+                Modifier
+                    .clip(ContinuousCapsule)
+                    .height(6f.dp)
+                    .fillMaxWidth()
+            ) {
+                val filledWidth = (size.width * dampedDragAnimation.progress).coerceAtLeast(0f)
+                drawSegments(accentColor, filledWidth, size.height, size.width)
+            }
+        }
+
+        Box(
+            Modifier
+                .graphicsLayer {
+                    translationX =
+                        (-size.width / 2f + trackWidth * dampedDragAnimation.progress)
+                            .fastCoerceIn(-size.width / 4f, trackWidth - size.width * 3f / 4f) * if (isLtr) 1f else -1f
+                }
+                .then(dampedDragAnimation.modifier)
+                .drawBackdrop(
+                    backdrop = rememberCombinedBackdrop(
+                        backdrop,
+                        rememberBackdrop(trackBackdrop) { drawBackdrop ->
+                            val progress = dampedDragAnimation.pressProgress
+                            val scaleX = lerp(2f / 3f, 1f, progress)
+                            val scaleY = lerp(0f, 1f, progress)
+                            scale(scaleX, scaleY) {
+                                drawBackdrop()
+                            }
+                        }
+                    ),
+                    shape = { ContinuousCapsule },
+                    effects = {
+                        val progress = dampedDragAnimation.pressProgress
+                        blur(8f.dp.toPx() * (1f - progress))
+                        lens(
+                            10f.dp.toPx() * progress,
+                            14f.dp.toPx() * progress,
+                            chromaticAberration = true
+                        )
+                    },
+                    highlight = {
+                        val progress = dampedDragAnimation.pressProgress
+                        Highlight.Ambient.copy(
+                            width = Highlight.Ambient.width / 1.5f,
+                            blurRadius = Highlight.Ambient.blurRadius / 1.5f,
+                            alpha = progress
+                        )
+                    },
+                    shadow = {
+                        Shadow(
+                            radius = 4f.dp,
+                            color = Color.Black.copy(alpha = 0.05f)
+                        )
+                    },
+                    innerShadow = {
+                        val progress = dampedDragAnimation.pressProgress
+                        InnerShadow(
+                            radius = 4f.dp * progress,
+                            alpha = progress
+                        )
+                    },
+                    layerBlock = {
+                        scaleX = dampedDragAnimation.scaleX
+                        scaleY = dampedDragAnimation.scaleY
+                        val velocity = dampedDragAnimation.velocity / 10f
+                        scaleX /= 1f - (velocity * 0.75f).fastCoerceIn(-0.2f, 0.2f)
+                        scaleY *= 1f - (velocity * 0.25f).fastCoerceIn(-0.2f, 0.2f)
+                    },
+                    onDrawSurface = {
+                        val progress = dampedDragAnimation.pressProgress
+                        drawRect(Color.White.copy(alpha = 1f - progress))
+                    }
+                )
+                .size(40f.dp, 24f.dp)
+        )
+    }
+}
+
+@Composable
+fun LiquidGlass(
+    backdrop: Backdrop,
+    modifier: Modifier = Modifier,
+    shape: Shape = RoundedCornerShape(16.dp),
+    blurRadius: Dp = 10.dp,
+    refractionAmount: Float = 0.5f,
+    highlight: Highlight = Highlight.Default,
+    shadow: Shadow? = Shadow.Default,
+    content: @Composable () -> Unit
+) {
+    Box(
+        modifier = modifier
+            .drawBackdrop(
+                backdrop = backdrop,
+                shape = { shape },
+                effects = {
+                    blur(blurRadius.toPx())
+                    lens(
+                        refractionHeight = blurRadius.toPx() / 2,
+                        refractionAmount = blurRadius.toPx() * refractionAmount,
+                        chromaticAberration = true
+                    )
+                },
+                highlight = { highlight },
+                shadow = { shadow },
+                onDrawSurface = {
+                     // Optional: add a slight tint if needed
+                }
+            )
+    ) {
+        content()
+    }
 }

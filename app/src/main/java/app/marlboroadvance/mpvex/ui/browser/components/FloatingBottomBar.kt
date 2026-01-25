@@ -24,8 +24,17 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import app.marlboroadvance.mpvex.preferences.preference.collectAsState
 
 /**
  * Material 3 Floating Button Bar for file/folder operations
@@ -33,7 +42,7 @@ import androidx.compose.ui.unit.dp
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun BrowserBottomBar(
+fun FloatingBottomBar(
   isSelectionMode: Boolean,
   onCopyClick: () -> Unit,
   onMoveClick: () -> Unit,
@@ -50,8 +59,14 @@ fun BrowserBottomBar(
   AnimatedVisibility(
     visible = isSelectionMode,
     modifier = modifier,
-    enter = fadeIn(),
-    exit = fadeOut(),
+    enter = slideInVertically(
+        initialOffsetY = { it },
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow, dampingRatio = Spring.DampingRatioLowBouncy)
+    ) + fadeIn(),
+    exit = slideOutVertically(
+        targetOffsetY = { it },
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow, dampingRatio = Spring.DampingRatioNoBouncy)
+    ) + fadeOut(),
   ) {
     Surface(
       modifier = Modifier

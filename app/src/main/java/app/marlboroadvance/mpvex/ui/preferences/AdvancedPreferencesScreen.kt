@@ -267,6 +267,29 @@ object AdvancedPreferencesScreen : Screen {
             }
           }
           
+          // Experimental Section
+          item {
+             PreferenceSectionHeader(title = "Experimental")
+          }
+          
+          item {
+            PreferenceCard {
+              val enableLiquidGlass by preferences.enableLiquidGlass.collectAsState()
+              
+              SwitchPreference(
+                value = enableLiquidGlass,
+                onValueChange = preferences.enableLiquidGlass::set,
+                title = { Text("Liquid Glass") },
+                summary = { 
+                  Text(
+                    "Enable experimental Liquid Glass effects throughout the app",
+                    color = MaterialTheme.colorScheme.outline,
+                  ) 
+                },
+              )
+            }
+          }
+          
           // MPV Configuration Section
           item {
             PreferenceSectionHeader(title = "MPV Configuration")

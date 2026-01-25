@@ -19,4 +19,5 @@ class AdvancedPreferences(
   val enableLuaScripts = preferenceStore.getBoolean("enable_lua_scripts", false)
   val selectedLuaScripts = preferenceStore.getStringSet("selected_lua_scripts", emptySet())
 
+  val enableLiquidGlass = preferenceStore.getBoolean("enable_liquid_glass", false)
 }

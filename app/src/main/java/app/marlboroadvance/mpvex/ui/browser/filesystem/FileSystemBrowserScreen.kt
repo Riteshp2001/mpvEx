@@ -92,7 +92,7 @@ import app.marlboroadvance.mpvex.preferences.preference.collectAsState
 import app.marlboroadvance.mpvex.presentation.components.pullrefresh.PullRefreshBox
 import app.marlboroadvance.mpvex.ui.browser.cards.FolderCard
 import app.marlboroadvance.mpvex.ui.browser.cards.VideoCard
-import app.marlboroadvance.mpvex.ui.browser.components.BrowserBottomBar
+import app.marlboroadvance.mpvex.ui.browser.components.FloatingBottomBar
 import app.marlboroadvance.mpvex.ui.browser.components.BrowserTopBar
 import app.marlboroadvance.mpvex.ui.browser.dialogs.AddToPlaylistDialog
 import app.marlboroadvance.mpvex.ui.browser.dialogs.DeleteConfirmationDialog
@@ -892,7 +892,7 @@ fun FileSystemBrowserScreen(path: String? = null) {
       ),
       modifier = Modifier.align(Alignment.BottomCenter)
     ) {
-      BrowserBottomBar(
+      FloatingBottomBar(
         isSelectionMode = true,
         onCopyClick = {
           operationType.value = CopyPasteOps.OperationType.Copy
