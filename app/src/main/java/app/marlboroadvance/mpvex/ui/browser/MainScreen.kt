@@ -22,7 +22,13 @@ import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.PlaylistPlay
+import androidx.compose.material.icons.rounded.Language
+import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.Icon
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -51,6 +57,16 @@ import app.marlboroadvance.mpvex.ui.compose.LocalLazyGridState
 import app.marlboroadvance.mpvex.ui.compose.LocalLazyListState
 import kotlinx.coroutines.delay
 import kotlinx.serialization.Serializable
+import app.marlboroadvance.mpvex.preferences.AdvancedPreferences
+import app.marlboroadvance.mpvex.preferences.preference.collectAsState
+import org.koin.compose.koinInject
+import app.marlboroadvance.mpvex.ui.liquidglass.backdrops.rememberLayerBackdrop
+import app.marlboroadvance.mpvex.ui.liquidglass.backdrops.layerBackdrop
+import app.marlboroadvance.mpvex.ui.liquidglass.LiquidBottomTabs
+import app.marlboroadvance.mpvex.ui.liquidglass.LiquidBottomTab
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 
 @Serializable
 object MainScreen : Screen {
@@ -130,6 +146,10 @@ object MainScreen : Screen {
     val lazyListState = rememberLazyListState()
     val lazyGridState = rememberLazyGridState()
 
+    val advancedPreferences = koinInject<AdvancedPreferences>()
+    val enableLiquidGlass by advancedPreferences.enableLiquidGlass.collectAsState()
+    val backdrop = rememberLayerBackdrop()
+
     // Shared state (across the app)
     val isInSelectionMode = remember { mutableStateOf(isInSelectionModeShared) }
     val hideNavigationBar = remember { mutableStateOf(shouldHideNavigationBar) }
@@ -167,140 +187,181 @@ object MainScreen : Screen {
       persistentSelectedTab = selectedTab
     }
 
-    // Scaffold with bottom navigation bar
-    Scaffold(
-      modifier = Modifier.fillMaxSize(),
-      bottomBar = {
-        // Animated bottom navigation bar with slide animations
-        AnimatedVisibility(
-          visible = !hideNavigationBar.value,
-          enter = slideInVertically(
-            animationSpec = tween(durationMillis = 300),
-            initialOffsetY = { fullHeight -> fullHeight }
-          ),
-          exit = slideOutVertically(
-            animationSpec = tween(durationMillis = 300),
-            targetOffsetY = { fullHeight -> fullHeight }
-          )
-        ) {
-          NavigationBar(
-            modifier = Modifier
-              .clip(
-                RoundedCornerShape(
-                  topStart = 28.dp,
-                  topEnd = 28.dp,
-                  bottomStart = 0.dp,
-                  bottomEnd = 0.dp
-                )
-              )
-          ) {
-            NavigationBarItem(
-              icon = { Icon(Icons.Filled.Home, contentDescription = "Home") },
-              label = { Text("Home") },
-              selected = selectedTab == 0,
-              onClick = { selectedTab = 0 }
-            )
-            NavigationBarItem(
-              icon = { Icon(Icons.Filled.History, contentDescription = "Recents") },
-              label = { Text("Recents") },
-              selected = selectedTab == 1,
-              onClick = { selectedTab = 1 }
-            )
-            NavigationBarItem(
-              icon = { Icon(Icons.AutoMirrored.Filled.PlaylistPlay, contentDescription = "Playlists") },
-              label = { Text("Playlists") },
-              selected = selectedTab == 2,
-              onClick = { selectedTab = 2 }
-            )
-            NavigationBarItem(
-              icon = { Icon(Icons.Filled.Language, contentDescription = "Network") },
-              label = { Text("Network") },
-              selected = selectedTab == 3,
-              onClick = { selectedTab = 3 }
-            )
-          }
-        }
-      }
-    ) { paddingValues ->
-      Box(modifier = Modifier.fillMaxSize()) {
-        // Always use 80dp bottom padding regardless of navigation bar visibility
-        val fabBottomPadding = 80.dp
-
-        AnimatedContent(
-          targetState = selectedTab,
-          transitionSpec = {
-            // Material 3 Expressive slide-in-fade animation (like Google Phone app)
-            val slideDistance = with(density) { 48.dp.roundToPx() }
-            val animationDuration = 400
-            
-            if (targetState > initialState) {
-              // Moving forward: slide in from right with fade
-              (slideInHorizontally(
-                animationSpec = tween(
-                  durationMillis = animationDuration,
-                  easing = FastOutSlowInEasing
-                ),
-                initialOffsetX = { slideDistance }
-              ) + fadeIn(
-                animationSpec = tween(
-                  durationMillis = animationDuration,
-                  easing = FastOutSlowInEasing
-                )
-              )) togetherWith (slideOutHorizontally(
-                animationSpec = tween(
-                  durationMillis = animationDuration,
-                  easing = FastOutSlowInEasing
-                ),
-                targetOffsetX = { -slideDistance }
-              ) + fadeOut(
-                animationSpec = tween(
-                  durationMillis = animationDuration / 2,
-                  easing = FastOutSlowInEasing
-                )
-              ))
-            } else {
-              // Moving backward: slide in from left with fade
-              (slideInHorizontally(
-                animationSpec = tween(
-                  durationMillis = animationDuration,
-                  easing = FastOutSlowInEasing
-                ),
-                initialOffsetX = { -slideDistance }
-              ) + fadeIn(
-                animationSpec = tween(
-                  durationMillis = animationDuration,
-                  easing = FastOutSlowInEasing
-                )
-              )) togetherWith (slideOutHorizontally(
-                animationSpec = tween(
-                  durationMillis = animationDuration,
-                  easing = FastOutSlowInEasing
-                ),
-                targetOffsetX = { slideDistance }
-              ) + fadeOut(
-                animationSpec = tween(
-                  durationMillis = animationDuration / 2,
-                  easing = FastOutSlowInEasing
-                )
-              ))
-            }
-          },
-          label = "tab_animation"
-        ) { targetTab ->
-          CompositionLocalProvider(
-            LocalNavigationBarHeight provides fabBottomPadding,
-            LocalLazyListState provides lazyListState,
-            LocalLazyGridState provides lazyGridState
-          ) {
-            when (targetTab) {
-              0 -> FolderListScreen.Content()
-              1 -> RecentlyPlayedScreen.Content()
-              2 -> PlaylistScreen.Content()
-              3 -> NetworkStreamingScreen.Content()
+    Box(Modifier.fillMaxSize()) {
+        Scaffold(
+          modifier = Modifier
+              .fillMaxSize()
+              .let { if (enableLiquidGlass) it.layerBackdrop(backdrop) else it },
+          bottomBar = {
+            if (!enableLiquidGlass) {
+                // Animated bottom navigation bar with slide animations
+                AnimatedVisibility(
+                  visible = !hideNavigationBar.value,
+                  enter = slideInVertically(
+                    animationSpec = tween(durationMillis = 300),
+                    initialOffsetY = { fullHeight -> fullHeight }
+                  ),
+                  exit = slideOutVertically(
+                    animationSpec = tween(durationMillis = 300),
+                    targetOffsetY = { fullHeight -> fullHeight }
+                  )
+                ) {
+                  NavigationBar(
+                    modifier = Modifier
+                      .clip(
+                        RoundedCornerShape(
+                          topStart = 28.dp,
+                          topEnd = 28.dp,
+                          bottomStart = 0.dp,
+                          bottomEnd = 0.dp
+                        )
+                      )
+                  ) {
+                    NavigationBarItem(
+                      icon = { Icon(Icons.Filled.Home, contentDescription = "Home") },
+                      label = { Text("Home") },
+                      selected = selectedTab == 0,
+                      onClick = { selectedTab = 0 }
+                    )
+                    NavigationBarItem(
+                      icon = { Icon(Icons.Filled.History, contentDescription = "Recents") },
+                      label = { Text("Recents") },
+                      selected = selectedTab == 1,
+                      onClick = { selectedTab = 1 }
+                    )
+                    NavigationBarItem(
+                      icon = { Icon(Icons.AutoMirrored.Filled.PlaylistPlay, contentDescription = "Playlists") },
+                      label = { Text("Playlists") },
+                      selected = selectedTab == 2,
+                      onClick = { selectedTab = 2 }
+                    )
+                    NavigationBarItem(
+                      icon = { Icon(Icons.Filled.Language, contentDescription = "Network") },
+                      label = { Text("Network") },
+                      selected = selectedTab == 3,
+                      onClick = { selectedTab = 3 }
+                    )
+                  }
+                }
             }
           }
+        ) { paddingValues ->
+          Box(modifier = Modifier.fillMaxSize()) {
+            // Always use 80dp bottom padding regardless of navigation bar visibility
+            val fabBottomPadding = 80.dp
+    
+            AnimatedContent(
+              targetState = selectedTab,
+              transitionSpec = {
+                // Material 3 Expressive slide-in-fade animation (like Google Phone app)
+                val slideDistance = with(density) { 48.dp.roundToPx() }
+                val animationDuration = 400
+                
+                if (targetState > initialState) {
+                  // Moving forward: slide in from right with fade
+                  (slideInHorizontally(
+                    animationSpec = tween(
+                      durationMillis = animationDuration,
+                      easing = FastOutSlowInEasing
+                    ),
+                    initialOffsetX = { slideDistance }
+                  ) + fadeIn(
+                    animationSpec = tween(
+                      durationMillis = animationDuration,
+                      easing = FastOutSlowInEasing
+                    )
+                  )) togetherWith (slideOutHorizontally(
+                    animationSpec = tween(
+                      durationMillis = animationDuration,
+                      easing = FastOutSlowInEasing
+                    ),
+                    targetOffsetX = { -slideDistance }
+                  ) + fadeOut(
+                    animationSpec = tween(
+                      durationMillis = animationDuration / 2,
+                      easing = FastOutSlowInEasing
+                    )
+                  ))
+                } else {
+                  // Moving backward: slide in from left with fade
+                  (slideInHorizontally(
+                    animationSpec = tween(
+                      durationMillis = animationDuration,
+                      easing = FastOutSlowInEasing
+                    ),
+                    initialOffsetX = { -slideDistance }
+                  ) + fadeIn(
+                    animationSpec = tween(
+                      durationMillis = animationDuration,
+                      easing = FastOutSlowInEasing
+                    )
+                  )) togetherWith (slideOutHorizontally(
+                    animationSpec = tween(
+                      durationMillis = animationDuration,
+                      easing = FastOutSlowInEasing
+                    ),
+                    targetOffsetX = { slideDistance }
+                  ) + fadeOut(
+                    animationSpec = tween(
+                      durationMillis = animationDuration / 2,
+                      easing = FastOutSlowInEasing
+                    )
+                  ))
+                }
+              },
+              label = "tab_animation"
+            ) { targetTab ->
+              CompositionLocalProvider(
+                LocalNavigationBarHeight provides fabBottomPadding,
+                LocalLazyListState provides lazyListState,
+                LocalLazyGridState provides lazyGridState
+              ) {
+                when (targetTab) {
+                  0 -> FolderListScreen.Content()
+                  1 -> RecentlyPlayedScreen.Content()
+                  2 -> PlaylistScreen.Content()
+                  3 -> NetworkStreamingScreen.Content()
+                }
+              }
+            }
+          }
         }
-      }
+    
+        if (enableLiquidGlass && !hideNavigationBar.value) {
+             Box(
+                 modifier = Modifier
+                     .align(Alignment.BottomCenter)
+                     .padding(bottom = 32.dp, start = 16.dp, end = 16.dp)
+             ) {
+                 val isDark = isSystemInDarkTheme()
+                 val iconColor = if (isDark) Color.White else Color.Black
+                 
+                 LiquidBottomTabs(
+                     selectedTabIndex = { selectedTab },
+                     onTabSelected = { selectedTab = it },
+                     backdrop = backdrop,
+                     tabsCount = 4,
+                     modifier = Modifier
+                 ) {
+                     LiquidBottomTab(onClick = { selectedTab = 0 }) {
+                          Icon(Icons.Rounded.Home, "Home", tint = iconColor, modifier = Modifier.size(24.dp))
+                          androidx.compose.material3.Text("Home", color = iconColor, style = androidx.compose.material3.MaterialTheme.typography.labelSmall)
+                     }
+                     LiquidBottomTab(onClick = { selectedTab = 1 }) {
+                          Icon(Icons.Rounded.History, "Recents", tint = iconColor, modifier = Modifier.size(24.dp))
+                          androidx.compose.material3.Text("Recents", color = iconColor, style = androidx.compose.material3.MaterialTheme.typography.labelSmall)
+                     }
+                     LiquidBottomTab(onClick = { selectedTab = 2 }) {
+                         Icon(Icons.Rounded.PlaylistPlay, "Playlists", tint = iconColor, modifier = Modifier.size(24.dp))
+                         androidx.compose.material3.Text("Playlists", color = iconColor, style = androidx.compose.material3.MaterialTheme.typography.labelSmall)
+                     }
+                     LiquidBottomTab(onClick = { selectedTab = 3 }) {
+                         Icon(Icons.Rounded.Language, "Network", tint = iconColor, modifier = Modifier.size(24.dp))
+                         androidx.compose.material3.Text("Network", color = iconColor, style = androidx.compose.material3.MaterialTheme.typography.labelSmall)
+                     }
+                 }
+             }
+        }
     }
   }
 }

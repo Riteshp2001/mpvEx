@@ -108,6 +108,8 @@ import my.nanihadesuka.compose.ScrollbarSettings
 import org.koin.compose.koinInject
 import java.io.File
 import kotlin.math.roundToInt
+import app.marlboroadvance.mpvex.ui.liquidglass.backdrops.rememberLayerBackdrop
+import app.marlboroadvance.mpvex.ui.liquidglass.backdrops.layerBackdrop
 
 
 @Serializable
@@ -187,6 +189,8 @@ data class VideoListScreen(
     // Bottom bar animation state
     var showFloatingBottomBar by remember { mutableStateOf(false) }
     val animationDuration = 300
+    
+    val backdrop = rememberLayerBackdrop()
 
     // Handle selection mode changes with animation
     LaunchedEffect(selectionManager.isInSelectionMode) {
@@ -320,7 +324,9 @@ data class VideoListScreen(
           },
           onVideoLongClick = { video -> selectionManager.toggle(video) },
           isFabVisible = isFabVisible,
-          modifier = Modifier.padding(padding),
+          modifier = Modifier
+              .padding(padding)
+              .layerBackdrop(backdrop),
           showFloatingBottomBar = showFloatingBottomBar,
         )
         
@@ -350,7 +356,8 @@ data class VideoListScreen(
             onRenameClick = { renameDialogOpen.value = true },
             onDeleteClick = { deleteDialogOpen.value = true },
             onAddToPlaylistClick = { addToPlaylistDialogOpen.value = true },
-            showRename = selectionManager.isSingleSelection
+            showRename = selectionManager.isSingleSelection,
+            backdrop = backdrop
           )
         }
       }
@@ -681,8 +688,8 @@ private fun VideoListContent(
                   end = 8.dp,
                   bottom = if (showFloatingBottomBar) 88.dp else 16.dp
                 ),
-              horizontalArrangement = Arrangement.spacedBy(8.dp),
-              verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
             items(
               count = videosWithInfo.size,

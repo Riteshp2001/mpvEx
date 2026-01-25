@@ -122,6 +122,8 @@ import my.nanihadesuka.compose.LazyColumnScrollbar
 import my.nanihadesuka.compose.LazyVerticalGridScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
 import org.koin.compose.koinInject
+import app.marlboroadvance.mpvex.ui.liquidglass.backdrops.rememberLayerBackdrop
+import app.marlboroadvance.mpvex.ui.liquidglass.backdrops.layerBackdrop
 
 /**
  * Root File System Browser screen - shows storage volumes
@@ -231,6 +233,8 @@ fun FileSystemBrowserScreen(path: String? = null) {
 
   // Animation duration for the slide animations
   val animationDuration = 300
+  
+  val backdrop = rememberLayerBackdrop()
 
   // Selection managers - separate for folders and videos
   val folders = items.filterIsInstance<FileSystemItem.Folder>()
@@ -770,7 +774,7 @@ fun FileSystemBrowserScreen(path: String? = null) {
         }
       },
     ) { padding ->
-      Box(modifier = Modifier.padding(padding)) {
+      Box(modifier = Modifier.padding(padding).layerBackdrop(backdrop)) {
         when (permissionState.status) {
           PermissionStatus.Granted -> {
             if (isSearching) {
@@ -906,7 +910,8 @@ fun FileSystemBrowserScreen(path: String? = null) {
         onDeleteClick = { deleteDialogOpen.value = true },
         onAddToPlaylistClick = { addToPlaylistDialogOpen.value = true },
         showRename = videoSelectionManager.isSingleSelection,
-        modifier = Modifier.padding(bottom = 0.dp) // Zero bottom padding - absolute bottom
+        modifier = Modifier.padding(bottom = 0.dp), // Zero bottom padding - absolute bottom
+        backdrop = backdrop
       )
     }
 
