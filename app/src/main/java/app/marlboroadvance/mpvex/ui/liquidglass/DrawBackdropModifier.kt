@@ -261,6 +261,7 @@ private class DrawBackdropNode(
     private val recordBackdropBlock: (DrawScope.() -> Unit) = {
         val canvas = drawContext.canvas
         val padding = padding
+        val backdrop = backdrop // capture current reference
 
         if (padding != 0f) {
             canvas.translate(padding, padding)
@@ -281,15 +282,16 @@ private class DrawBackdropNode(
 
     private val drawBackdropLayer: DrawScope.() -> Unit = {
         val layer = graphicsLayer
-        if (layer != null) {
+        if (layer != null && size.width > 0 && size.height > 0) {
             val padding = padding
+            val recorderSize = IntSize(
+                (size.width + padding * 2).toInt().coerceAtLeast(1),
+                (size.height + padding * 2).toInt().coerceAtLeast(1)
+            )
 
             recordLayer(
                 layer,
-                size = IntSize(
-                    size.width.toInt() + padding.toInt() * 2,
-                    size.height.toInt() + padding.toInt() * 2
-                ),
+                size = recorderSize,
                 block = recordBackdropBlock
             )
 

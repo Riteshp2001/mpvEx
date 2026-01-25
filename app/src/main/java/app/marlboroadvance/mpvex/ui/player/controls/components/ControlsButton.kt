@@ -30,6 +30,9 @@ import app.marlboroadvance.mpvex.preferences.preference.collectAsState
 import app.marlboroadvance.mpvex.ui.player.controls.LocalPlayerButtonsClickEvent
 import app.marlboroadvance.mpvex.ui.theme.spacing
 import org.koin.compose.koinInject
+import app.marlboroadvance.mpvex.preferences.AdvancedPreferences
+import app.marlboroadvance.mpvex.ui.liquidglass.LiquidButton
+import app.marlboroadvance.mpvex.ui.liquidglass.backdrops.rememberLayerBackdrop
 
 @Suppress("ModifierClickableOrder")
 @OptIn(ExperimentalFoundationApi::class)
@@ -46,44 +49,70 @@ fun ControlsButton(
   val appearancePreferences = koinInject<AppearancePreferences>()
   val hideBackground by appearancePreferences.hidePlayerButtonsBackground.collectAsState()
 
+  val advancedPreferences = koinInject<AdvancedPreferences>()
+  val enableLiquidGlass by advancedPreferences.enableLiquidGlass.collectAsState()
+  val backdrop = if (enableLiquidGlass) rememberLayerBackdrop() else null
+
   val clickEvent = LocalPlayerButtonsClickEvent.current
-  Surface(
-    modifier =
-      modifier
-        .clip(CircleShape)
-        .combinedClickable(
+  
+  if (enableLiquidGlass) {
+      LiquidButton(
           onClick = {
-            clickEvent()
-            onClick()
+              clickEvent()
+              onClick()
           },
-          onLongClick = onLongClick,
-          interactionSource = interactionSource,
-          indication = ripple(),
-        ),
-    shape = CircleShape,
-    color = if (hideBackground) Color.Transparent else MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.55f),
-    contentColor = color ?: MaterialTheme.colorScheme.onSurface,
-    tonalElevation = 0.dp,
-    shadowElevation = 0.dp,
-    border =
-      if (hideBackground) {
-        null
-      } else {
-        BorderStroke(
-          1.dp,
-          MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+          modifier = modifier,
+          backdrop = backdrop,
+          shape = CircleShape
+      ) {
+          Icon(
+              imageVector = icon,
+              contentDescription = title,
+              tint = color ?: MaterialTheme.colorScheme.onSurface,
+              modifier = Modifier
+                  .padding(MaterialTheme.spacing.small)
+                  .size(20.dp),
+          )
+      }
+  } else {
+      Surface(
+        modifier =
+          modifier
+            .clip(CircleShape)
+            .combinedClickable(
+              onClick = {
+                clickEvent()
+                onClick()
+              },
+              onLongClick = onLongClick,
+              interactionSource = interactionSource,
+              indication = ripple(),
+            ),
+        shape = CircleShape,
+        color = if (hideBackground) Color.Transparent else MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.55f),
+        contentColor = color ?: MaterialTheme.colorScheme.onSurface,
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
+        border =
+          if (hideBackground) {
+            null
+          } else {
+            BorderStroke(
+              1.dp,
+              MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+            )
+          },
+      ) {
+        Icon(
+          imageVector = icon,
+          contentDescription = title,
+          tint = color ?: MaterialTheme.colorScheme.onSurface,
+          modifier =
+            Modifier
+              .padding(MaterialTheme.spacing.small)
+              .size(20.dp),
         )
-      },
-  ) {
-    Icon(
-      imageVector = icon,
-      contentDescription = title,
-      tint = color ?: MaterialTheme.colorScheme.onSurface,
-      modifier =
-        Modifier
-          .padding(MaterialTheme.spacing.small)
-          .size(20.dp),
-    )
+      }
   }
 }
 

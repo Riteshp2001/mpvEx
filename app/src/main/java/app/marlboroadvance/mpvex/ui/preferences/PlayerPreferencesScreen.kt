@@ -30,7 +30,9 @@ import kotlinx.serialization.Serializable
 import me.zhanghai.compose.preference.ListPreference
 import me.zhanghai.compose.preference.ProvidePreferenceLocals
 import me.zhanghai.compose.preference.SliderPreference
-import me.zhanghai.compose.preference.SwitchPreference
+import app.marlboroadvance.mpvex.ui.preferences.components.LiquidSwitchPreference
+import app.marlboroadvance.mpvex.ui.liquidglass.backdrops.rememberLayerBackdrop
+import app.marlboroadvance.mpvex.ui.liquidglass.backdrops.layerBackdrop
 import org.koin.compose.koinInject
 
 @Serializable
@@ -41,6 +43,7 @@ object PlayerPreferencesScreen : Screen {
     val backstack = LocalBackStack.current
     val context = LocalContext.current
     val preferences = koinInject<PlayerPreferences>()
+
     Scaffold(
       topBar = {
         TopAppBar(
@@ -96,25 +99,27 @@ object PlayerPreferencesScreen : Screen {
               PreferenceDivider()
               
               val savePositionOnQuit by preferences.savePositionOnQuit.collectAsState()
-              SwitchPreference(
+              LiquidSwitchPreference(
                 value = savePositionOnQuit,
                 onValueChange = preferences.savePositionOnQuit::set,
                 title = { Text(stringResource(R.string.pref_player_save_position_on_quit)) },
+                backdrop = null
               )
               
               PreferenceDivider()
               
               val closeAfterEndOfVideo by preferences.closeAfterReachingEndOfVideo.collectAsState()
-              SwitchPreference(
+              LiquidSwitchPreference(
                 value = closeAfterEndOfVideo,
                 onValueChange = preferences.closeAfterReachingEndOfVideo::set,
                 title = { Text(stringResource(id = R.string.pref_player_close_after_eof)) },
+                backdrop = null
               )
               
               PreferenceDivider()
               
               val autoplayNextVideo by preferences.autoplayNextVideo.collectAsState()
-              SwitchPreference(
+              LiquidSwitchPreference(
                 value = autoplayNextVideo,
                 onValueChange = preferences.autoplayNextVideo::set,
                 title = { Text(text = "Autoplay next video") },
@@ -127,12 +132,13 @@ object PlayerPreferencesScreen : Screen {
                     color = MaterialTheme.colorScheme.outline,
                   )
                 },
+                backdrop = null
               )
               
               PreferenceDivider()
               
               val playlistMode by preferences.playlistMode.collectAsState()
-              SwitchPreference(
+              LiquidSwitchPreference(
                 value = playlistMode,
                 onValueChange = preferences.playlistMode::set,
                 title = { Text(text = "Enable next/previous navigation") },
@@ -145,21 +151,23 @@ object PlayerPreferencesScreen : Screen {
                     color = MaterialTheme.colorScheme.outline,
                   )
                 },
+                backdrop = null
               )
               
               PreferenceDivider()
 
               val rememberBrightness by preferences.rememberBrightness.collectAsState()
-              SwitchPreference(
+              LiquidSwitchPreference(
                 value = rememberBrightness,
                 onValueChange = preferences.rememberBrightness::set,
                 title = { Text(text = stringResource(R.string.pref_player_remember_brightness)) },
+                backdrop = null
               )
 
               PreferenceDivider()
 
               val autoPiPOnNavigation by preferences.autoPiPOnNavigation.collectAsState()
-              SwitchPreference(
+              LiquidSwitchPreference(
                 value = autoPiPOnNavigation,
                 onValueChange = preferences.autoPiPOnNavigation::set,
                 title = { Text("Auto Picture-in-Picture") },
@@ -169,6 +177,7 @@ object PlayerPreferencesScreen : Screen {
                     color = MaterialTheme.colorScheme.outline,
                   )
                 },
+                backdrop = null
               )
             }
           }
@@ -180,46 +189,51 @@ object PlayerPreferencesScreen : Screen {
           item {
             PreferenceCard {
               val horizontalSeekGesture by preferences.horizontalSeekGesture.collectAsState()
-              SwitchPreference(
+              LiquidSwitchPreference(
                 value = horizontalSeekGesture,
                 onValueChange = preferences.horizontalSeekGesture::set,
                 title = { Text(stringResource(R.string.pref_player_gestures_seek)) },
+                backdrop = null
               )
               
               PreferenceDivider()
               
               val showSeekbarWhenSeeking by preferences.showSeekBarWhenSeeking.collectAsState()
-              SwitchPreference(
+              LiquidSwitchPreference(
                 value = showSeekbarWhenSeeking,
                 onValueChange = preferences.showSeekBarWhenSeeking::set,
                 title = { Text(stringResource(R.string.pref_player_show_seekbar_when_seeking)) },
+                backdrop = null
               )
               
               PreferenceDivider()
               
               val showDoubleTapOvals by preferences.showDoubleTapOvals.collectAsState()
-              SwitchPreference(
+              LiquidSwitchPreference(
                 value = showDoubleTapOvals,
                 onValueChange = preferences.showDoubleTapOvals::set,
                 title = { Text(stringResource(R.string.show_splash_ovals_on_double_tap_to_seek)) },
+                backdrop = null
               )
               
               PreferenceDivider()
               
               val showSeekTimeWhileSeeking by preferences.showSeekTimeWhileSeeking.collectAsState()
-              SwitchPreference(
+              LiquidSwitchPreference(
                 value = showSeekTimeWhileSeeking,
                 onValueChange = preferences.showSeekTimeWhileSeeking::set,
                 title = { Text(stringResource(R.string.show_time_on_double_tap_to_seek)) },
+                backdrop = null
               )
               
               PreferenceDivider()
               
               val usePreciseSeeking by preferences.usePreciseSeeking.collectAsState()
-              SwitchPreference(
+              LiquidSwitchPreference(
                 value = usePreciseSeeking,
                 onValueChange = preferences.usePreciseSeeking::set,
                 title = { Text(stringResource(R.string.pref_player_use_precise_seeking)) },
+                backdrop = null
               )
 
               PreferenceDivider()
@@ -249,28 +263,31 @@ object PlayerPreferencesScreen : Screen {
           item {
             PreferenceCard {
               val brightnessGesture by preferences.brightnessGesture.collectAsState()
-              SwitchPreference(
+              LiquidSwitchPreference(
                 value = brightnessGesture,
                 onValueChange = preferences.brightnessGesture::set,
                 title = { Text(stringResource(R.string.pref_player_gestures_brightness)) },
+                backdrop = null
               )
               
               PreferenceDivider()
               
               val volumeGesture by preferences.volumeGesture.collectAsState()
-              SwitchPreference(
+              LiquidSwitchPreference(
                 value = volumeGesture,
                 onValueChange = preferences.volumeGesture::set,
                 title = { Text(stringResource(R.string.pref_player_gestures_volume)) },
+                backdrop = null
               )
               
               PreferenceDivider()
               
               val pinchToZoomGesture by preferences.pinchToZoomGesture.collectAsState()
-              SwitchPreference(
+              LiquidSwitchPreference(
                 value = pinchToZoomGesture,
                 onValueChange = preferences.pinchToZoomGesture::set,
                 title = { Text(stringResource(R.string.pref_player_gestures_pinch_to_zoom)) },
+                backdrop = null
               )
               
               PreferenceDivider()
@@ -298,7 +315,7 @@ object PlayerPreferencesScreen : Screen {
               PreferenceDivider()
               
               val showDynamicSpeedOverlay by preferences.showDynamicSpeedOverlay.collectAsState()
-              SwitchPreference(
+              LiquidSwitchPreference(
                 value = showDynamicSpeedOverlay,
                 onValueChange = preferences.showDynamicSpeedOverlay::set,
                 title = { Text("Dynamic Speed Overlay") },
@@ -307,7 +324,8 @@ object PlayerPreferencesScreen : Screen {
                     "Show advance overlay for speed control during long press and swipe",
                     color = MaterialTheme.colorScheme.outline,
                   ) 
-                }
+                },
+                backdrop = null
               )
             }
           }
@@ -319,7 +337,7 @@ object PlayerPreferencesScreen : Screen {
           item {
             PreferenceCard {
               val allowGesturesInPanels by preferences.allowGesturesInPanels.collectAsState()
-              SwitchPreference(
+              LiquidSwitchPreference(
                 value = allowGesturesInPanels,
                 onValueChange = preferences.allowGesturesInPanels::set,
                 title = {
@@ -327,24 +345,27 @@ object PlayerPreferencesScreen : Screen {
                     text = stringResource(id = R.string.pref_player_controls_allow_gestures_in_panels),
                   )
                 },
+                backdrop = null
               )
               
               PreferenceDivider()
               
               val swapVolumeAndBrightness by preferences.swapVolumeAndBrightness.collectAsState()
-              SwitchPreference(
+              LiquidSwitchPreference(
                 value = swapVolumeAndBrightness,
                 onValueChange = preferences.swapVolumeAndBrightness::set,
                 title = { Text(stringResource(R.string.swap_the_volume_and_brightness_slider)) },
+                backdrop = null
               )
               
               PreferenceDivider()
               
               val showLoadingCircle by preferences.showLoadingCircle.collectAsState()
-              SwitchPreference(
+              LiquidSwitchPreference(
                 value = showLoadingCircle,
                 onValueChange = preferences.showLoadingCircle::set,
                 title = { Text(stringResource(R.string.pref_player_controls_show_loading_circle)) },
+                backdrop = null
               )
             }
           }
@@ -356,28 +377,31 @@ object PlayerPreferencesScreen : Screen {
           item {
             PreferenceCard {
               val showSystemStatusBar by preferences.showSystemStatusBar.collectAsState()
-              SwitchPreference(
+              LiquidSwitchPreference(
                 value = showSystemStatusBar,
                 onValueChange = preferences.showSystemStatusBar::set,
                 title = { Text(stringResource(R.string.pref_player_display_show_status_bar)) },
+                backdrop = null
               )
 
               PreferenceDivider()
 
               val showSystemNavigationBar by preferences.showSystemNavigationBar.collectAsState()
-              SwitchPreference(
+              LiquidSwitchPreference(
                 value = showSystemNavigationBar,
                 onValueChange = preferences.showSystemNavigationBar::set,
                 title = { Text("Show navigation bar with controls") },
+                backdrop = null
               )
               
               PreferenceDivider()
               
               val reduceMotion by preferences.reduceMotion.collectAsState()
-              SwitchPreference(
+              LiquidSwitchPreference(
                 value = reduceMotion,
                 onValueChange = preferences.reduceMotion::set,
                 title = { Text(stringResource(R.string.pref_player_display_reduce_player_animation)) },
+                backdrop = null
               )
             }
           }

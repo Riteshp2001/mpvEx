@@ -3,7 +3,6 @@ package app.marlboroadvance.mpvex.ui.preferences
 // import androidx.compose.material.icons.outlined.VideoLabel // No longer needed here
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -11,7 +10,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -50,13 +48,15 @@ import app.marlboroadvance.mpvex.preferences.PlayerPreferences
 import app.marlboroadvance.mpvex.preferences.SeekbarStyle
 import app.marlboroadvance.mpvex.preferences.preference.collectAsState
 import app.marlboroadvance.mpvex.presentation.Screen
+import app.marlboroadvance.mpvex.ui.liquidglass.backdrops.layerBackdrop
+import app.marlboroadvance.mpvex.ui.liquidglass.backdrops.rememberLayerBackdrop
 import app.marlboroadvance.mpvex.ui.player.controls.components.SeekbarPreview
+import app.marlboroadvance.mpvex.ui.preferences.components.LiquidSwitchPreference
+import app.marlboroadvance.mpvex.ui.preferences.components.PlayerButtonChip
 import app.marlboroadvance.mpvex.ui.utils.LocalBackStack
 import kotlinx.serialization.Serializable
 import me.zhanghai.compose.preference.ListPreference
 import me.zhanghai.compose.preference.ProvidePreferenceLocals
-import me.zhanghai.compose.preference.SwitchPreference
-import app.marlboroadvance.mpvex.ui.preferences.components.PlayerButtonChip
 import org.koin.compose.koinInject
 
 // Enum to identify which region we are editing
@@ -239,7 +239,7 @@ object PlayerControlsPreferencesScreen : Screen {
             var customTimeValue by remember { mutableStateOf("") }
             
             PreferenceCard {
-              SwitchPreference(
+              LiquidSwitchPreference(
                 value = hidePlayerButtonsBackground,
                 onValueChange = { appearancePrefs.hidePlayerButtonsBackground.set(it) },
                 title = {
@@ -252,6 +252,7 @@ object PlayerControlsPreferencesScreen : Screen {
                     text = stringResource(id = R.string.pref_appearance_hide_player_buttons_background_summary),
                   )
                 },
+                backdrop = null
               )
               
               PreferenceDivider()

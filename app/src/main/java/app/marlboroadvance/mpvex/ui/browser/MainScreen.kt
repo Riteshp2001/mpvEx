@@ -33,6 +33,7 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -333,8 +334,8 @@ object MainScreen : Screen {
                      .align(Alignment.BottomCenter)
                      .padding(bottom = 32.dp, start = 16.dp, end = 16.dp)
              ) {
-                 val isDark = isSystemInDarkTheme()
-                 val iconColor = if (isDark) Color.White else Color.Black
+                 val iconColor = MaterialTheme.colorScheme.onSurface
+                 val selectedIconColor = MaterialTheme.colorScheme.primary
                  
                  LiquidBottomTabs(
                      selectedTabIndex = { selectedTab },
@@ -344,20 +345,24 @@ object MainScreen : Screen {
                      modifier = Modifier
                  ) {
                      LiquidBottomTab(onClick = { selectedTab = 0 }) {
-                          Icon(Icons.Rounded.Home, "Home", tint = iconColor, modifier = Modifier.size(24.dp))
-                          androidx.compose.material3.Text("Home", color = iconColor, style = androidx.compose.material3.MaterialTheme.typography.labelSmall)
+                          val color = if (selectedTab == 0) selectedIconColor else iconColor
+                          Icon(Icons.Rounded.Home, "Home", tint = color, modifier = Modifier.size(24.dp))
+                          androidx.compose.material3.Text("Home", color = color, style = androidx.compose.material3.MaterialTheme.typography.labelSmall)
                      }
                      LiquidBottomTab(onClick = { selectedTab = 1 }) {
-                          Icon(Icons.Rounded.History, "Recents", tint = iconColor, modifier = Modifier.size(24.dp))
-                          androidx.compose.material3.Text("Recents", color = iconColor, style = androidx.compose.material3.MaterialTheme.typography.labelSmall)
+                          val color = if (selectedTab == 1) selectedIconColor else iconColor
+                          Icon(Icons.Rounded.History, "Recents", tint = color, modifier = Modifier.size(24.dp))
+                          androidx.compose.material3.Text("Recents", color = color, style = androidx.compose.material3.MaterialTheme.typography.labelSmall)
                      }
                      LiquidBottomTab(onClick = { selectedTab = 2 }) {
-                         Icon(Icons.Rounded.PlaylistPlay, "Playlists", tint = iconColor, modifier = Modifier.size(24.dp))
-                         androidx.compose.material3.Text("Playlists", color = iconColor, style = androidx.compose.material3.MaterialTheme.typography.labelSmall)
+                         val color = if (selectedTab == 2) selectedIconColor else iconColor
+                         Icon(Icons.Rounded.PlaylistPlay, "Playlists", tint = color, modifier = Modifier.size(24.dp))
+                         androidx.compose.material3.Text("Playlists", color = color, style = androidx.compose.material3.MaterialTheme.typography.labelSmall)
                      }
                      LiquidBottomTab(onClick = { selectedTab = 3 }) {
-                         Icon(Icons.Rounded.Language, "Network", tint = iconColor, modifier = Modifier.size(24.dp))
-                         androidx.compose.material3.Text("Network", color = iconColor, style = androidx.compose.material3.MaterialTheme.typography.labelSmall)
+                         val color = if (selectedTab == 3) selectedIconColor else iconColor
+                         Icon(Icons.Rounded.Language, "Network", tint = color, modifier = Modifier.size(24.dp))
+                         androidx.compose.material3.Text("Network", color = color, style = androidx.compose.material3.MaterialTheme.typography.labelSmall)
                      }
                  }
              }

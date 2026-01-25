@@ -43,6 +43,9 @@ import app.marlboroadvance.mpvex.R
 import app.marlboroadvance.mpvex.preferences.SubtitlesPreferences
 import app.marlboroadvance.mpvex.preferences.preference.collectAsState
 import app.marlboroadvance.mpvex.presentation.Screen
+import app.marlboroadvance.mpvex.ui.liquidglass.backdrops.layerBackdrop
+import app.marlboroadvance.mpvex.ui.liquidglass.backdrops.rememberLayerBackdrop
+import app.marlboroadvance.mpvex.ui.preferences.components.LiquidSwitchPreference
 import app.marlboroadvance.mpvex.ui.utils.LocalBackStack
 import app.marlboroadvance.mpvex.utils.media.CustomFontEntry
 import app.marlboroadvance.mpvex.utils.media.copyFontsFromDirectory
@@ -53,7 +56,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import me.zhanghai.compose.preference.ProvidePreferenceLocals
-import me.zhanghai.compose.preference.SwitchPreference
 import me.zhanghai.compose.preference.TextFieldPreference
 import org.koin.compose.koinInject
 
@@ -187,7 +189,7 @@ object SubtitlesPreferencesScreen : Screen {
               PreferenceDivider()
 
               val autoload by preferences.autoloadMatchingSubtitles.collectAsState()
-              SwitchPreference(
+              LiquidSwitchPreference(
                 value = autoload,
                 onValueChange = { preferences.autoloadMatchingSubtitles.set(it) },
                 title = { Text(stringResource(R.string.pref_subtitles_autoload_title)) },
@@ -197,12 +199,13 @@ object SubtitlesPreferencesScreen : Screen {
                     color = MaterialTheme.colorScheme.outline,
                   )
                 },
+                backdrop = null
               )
 
               PreferenceDivider()
 
               val overrideAss by preferences.overrideAssSubs.collectAsState()
-              SwitchPreference(
+              LiquidSwitchPreference(
                 value = overrideAss,
                 onValueChange = { preferences.overrideAssSubs.set(it) },
                 title = { Text(stringResource(R.string.player_sheets_sub_override_ass)) },
@@ -212,12 +215,13 @@ object SubtitlesPreferencesScreen : Screen {
                     color = MaterialTheme.colorScheme.outline,
                   )
                 },
+                backdrop = null
               )
 
               PreferenceDivider()
 
               val scaleByWindow by preferences.scaleByWindow.collectAsState()
-              SwitchPreference(
+              LiquidSwitchPreference(
                 value = scaleByWindow,
                 onValueChange = { preferences.scaleByWindow.set(it) },
                 title = { Text(stringResource(R.string.player_sheets_sub_scale_by_window)) },
@@ -227,6 +231,7 @@ object SubtitlesPreferencesScreen : Screen {
                     color = MaterialTheme.colorScheme.outline,
                   )
                 },
+                backdrop = null
               )
 
               PreferenceDivider()

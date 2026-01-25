@@ -46,6 +46,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.marlboroadvance.mpvex.ui.theme.spacing
+import org.koin.compose.koinInject
+import app.marlboroadvance.mpvex.preferences.AdvancedPreferences
+import app.marlboroadvance.mpvex.preferences.preference.collectAsState
+import app.marlboroadvance.mpvex.ui.liquidglass.backdrops.rememberLayerBackdrop
+import app.marlboroadvance.mpvex.ui.liquidglass.drawBackdrop
+import app.marlboroadvance.mpvex.ui.liquidglass.effects.blur
+import app.marlboroadvance.mpvex.ui.liquidglass.effects.lens
+import app.marlboroadvance.mpvex.ui.liquidglass.effects.vibrancy
+import app.marlboroadvance.mpvex.ui.liquidglass.highlight.Highlight
+import app.marlboroadvance.mpvex.ui.liquidglass.shadow.Shadow
+import androidx.compose.foundation.isSystemInDarkTheme
 import kotlinx.coroutines.delay
 
 /**
@@ -68,19 +79,44 @@ fun SpeedControlSlider(
     kotlin.math.abs(it - currentSpeed) < 0.05f 
   }.coerceIn(0, speedPresets.size - 1)
   
+  val advancedPreferences = koinInject<AdvancedPreferences>()
+  val enableLiquidGlass by advancedPreferences.enableLiquidGlass.collectAsState()
+  val isDark = isSystemInDarkTheme()
   val primaryColor = MaterialTheme.colorScheme.primary
-  // Use a Surface with less rounded corners instead of CircleShape
+  val onSurfaceColor = MaterialTheme.colorScheme.onSurface
+
+  val containerModifier = if (enableLiquidGlass) {
+      val backdrop = rememberLayerBackdrop()
+      Modifier.drawBackdrop(
+          backdrop = backdrop,
+          shape = { RoundedCornerShape(12.dp) },
+          effects = {
+              vibrancy()
+              blur(12.dp.toPx())
+              lens(8.dp.toPx(), 8.dp.toPx())
+          },
+          highlight = { Highlight.Default.copy(alpha = 0.3f) },
+          shadow = { Shadow(radius = 8.dp, alpha = 0.15f) },
+          onDrawSurface = {
+              val tint = if (isDark) Color.Black else Color.White
+              drawRect(tint.copy(alpha = 0.1f))
+          }
+      )
+  } else {
+      Modifier.border(
+          1.dp,
+          MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+          RoundedCornerShape(12.dp)
+      )
+  }
+
   Surface(
     shape = RoundedCornerShape(12.dp),
-    color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.55f),
-    contentColor = MaterialTheme.colorScheme.onSurface,
+    color = if (enableLiquidGlass) Color.Transparent else MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.55f),
+    contentColor = onSurfaceColor,
     tonalElevation = 0.dp,
     shadowElevation = 0.dp,
-    border = BorderStroke(
-      1.dp,
-      MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
-    ),
-    modifier = modifier.animateContentSize(),
+    modifier = modifier.then(containerModifier).animateContentSize(),
   ) {
     Box(
       modifier = Modifier.padding(
@@ -108,7 +144,7 @@ fun SpeedControlSlider(
                   color = if (isCurrentSpeed) {
                     primaryColor
                   } else {
-                    Color.White.copy(alpha = 0.5f)
+                    onSurfaceColor.copy(alpha = 0.5f)
                   },
                 )
               }
@@ -127,7 +163,7 @@ fun SpeedControlSlider(
               
               // Background track
               drawLine(
-                color = Color.White.copy(alpha = 0.25f),
+                color = onSurfaceColor.copy(alpha = 0.25f),
                 start = Offset(0f, centerY),
                 end = Offset(trackWidth, centerY),
                 strokeWidth = trackHeight,
@@ -151,7 +187,7 @@ fun SpeedControlSlider(
                   color = if (index <= currentIndex) {
                     primaryColor
                   } else {
-                    Color.White.copy(alpha = 0.6f)
+                    onSurfaceColor.copy(alpha = 0.6f)
                   },
                   radius = 2.5.dp.toPx(),
                   center = Offset(tickX, centerY),

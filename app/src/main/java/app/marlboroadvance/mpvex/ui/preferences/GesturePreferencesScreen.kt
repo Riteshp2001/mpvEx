@@ -45,6 +45,9 @@ import me.zhanghai.compose.preference.FooterPreference
 import me.zhanghai.compose.preference.ListPreference
 import me.zhanghai.compose.preference.ProvidePreferenceLocals
 import me.zhanghai.compose.preference.SwitchPreference
+import app.marlboroadvance.mpvex.ui.preferences.components.LiquidSwitchPreference
+import app.marlboroadvance.mpvex.ui.liquidglass.backdrops.rememberLayerBackdrop
+import app.marlboroadvance.mpvex.ui.liquidglass.backdrops.layerBackdrop
 import org.koin.compose.koinInject
 
 @Serializable
@@ -251,7 +254,7 @@ object GesturePreferencesScreen : Screen {
           PreferenceDivider()
 
           val useSingleTapForCenter by preferences.useSingleTapForCenter.collectAsState()
-          SwitchPreference(
+          LiquidSwitchPreference(
             value = useSingleTapForCenter,
             onValueChange = { preferences.useSingleTapForCenter.set(it) },
             title = {
@@ -265,6 +268,7 @@ object GesturePreferencesScreen : Screen {
                 color = MaterialTheme.colorScheme.outline,
               )
             },
+            backdrop = null
           )
 
           val doubleTapKeyCodes =

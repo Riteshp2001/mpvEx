@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -20,7 +21,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,12 +36,14 @@ import app.marlboroadvance.mpvex.R
 import app.marlboroadvance.mpvex.preferences.DecoderPreferences
 import app.marlboroadvance.mpvex.preferences.preference.collectAsState
 import app.marlboroadvance.mpvex.presentation.Screen
+import app.marlboroadvance.mpvex.ui.liquidglass.backdrops.layerBackdrop
+import app.marlboroadvance.mpvex.ui.liquidglass.backdrops.rememberLayerBackdrop
 import app.marlboroadvance.mpvex.ui.player.Debanding
+import app.marlboroadvance.mpvex.ui.preferences.components.LiquidSwitchPreference
 import app.marlboroadvance.mpvex.ui.utils.LocalBackStack
 import kotlinx.serialization.Serializable
 import me.zhanghai.compose.preference.ListPreference
 import me.zhanghai.compose.preference.ProvidePreferenceLocals
-import me.zhanghai.compose.preference.SwitchPreference
 import org.koin.compose.koinInject
 
 @Serializable
@@ -53,6 +55,7 @@ object DecoderPreferencesScreen : Screen {
     val backstack = LocalBackStack.current
     val context = LocalContext.current
     var showGpuNextWarning by remember { mutableStateOf(false) }
+    
     Scaffold(
       topBar = {
         TopAppBar(
@@ -90,18 +93,19 @@ object DecoderPreferencesScreen : Screen {
           item {
             PreferenceCard {
               val tryHWDecoding by preferences.tryHWDecoding.collectAsState()
-              SwitchPreference(
+              LiquidSwitchPreference(
                 value = tryHWDecoding,
                 onValueChange = {
                   preferences.tryHWDecoding.set(it)
                 },
                 title = { Text(stringResource(R.string.pref_decoder_try_hw_dec_title)) },
+                backdrop = null
               )
 
               PreferenceDivider()
 
               val gpuNext by preferences.gpuNext.collectAsState()
-              SwitchPreference(
+              LiquidSwitchPreference(
                 value = gpuNext,
                 onValueChange = { enabled ->
                     if (enabled && !gpuNext) {
@@ -120,6 +124,7 @@ object DecoderPreferencesScreen : Screen {
                     color = MaterialTheme.colorScheme.outline,
                   )
                 },
+                backdrop = null
               )
 
               if (showGpuNextWarning) {
@@ -186,7 +191,7 @@ object DecoderPreferencesScreen : Screen {
               PreferenceDivider()
 
               val useYUV420p by preferences.useYUV420P.collectAsState()
-              SwitchPreference(
+              LiquidSwitchPreference(
                 value = useYUV420p,
                 onValueChange = {
                   preferences.useYUV420P.set(it)
@@ -198,12 +203,13 @@ object DecoderPreferencesScreen : Screen {
                     color = MaterialTheme.colorScheme.outline,
                   )
                 },
+                backdrop = null
               )
 
               PreferenceDivider()
               
               val enableAnime4K by preferences.enableAnime4K.collectAsState()
-              SwitchPreference(
+              LiquidSwitchPreference(
                 value = enableAnime4K,
                 onValueChange = { enabled ->
                     preferences.enableAnime4K.set(enabled)
@@ -230,6 +236,7 @@ object DecoderPreferencesScreen : Screen {
                     )
                   }
                 },
+                backdrop = null
               )
             }
           }

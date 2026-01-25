@@ -89,10 +89,10 @@ fun FloatingBottomBar(
   ) {
     if (enableLiquidGlass && backdrop != null) {
        // Liquid Glass Implementation (Static, no complex navigation logic)
-       val isDark = isSystemInDarkTheme()
-       val overlayColor = if (isDark) Color.Black.copy(alpha = 0.3f) else Color.White.copy(alpha = 0.3f)
-       val iconColor = if (isDark) Color.White else Color.Black
-       
+        val isDark = isSystemInDarkTheme()
+        val overlayColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.3f)
+        val iconColor = MaterialTheme.colorScheme.onSurface
+
        Box(
            modifier = Modifier
                .windowInsetsPadding(WindowInsets.systemBars)
@@ -111,14 +111,14 @@ fun FloatingBottomBar(
                    }
                )
        ) {
-           Row(
-               modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
-               horizontalArrangement = Arrangement.spacedBy(8.dp),
-           ) {
-               val buttonContentColor = if (isDark) Color.White else Color.Black
-               
+            Row(
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                val buttonContentColor = MaterialTheme.colorScheme.onSurface
+
                LiquidButton(
-                   onClick = onCopyClick, 
+                   onClick = onCopyClick,
                    enabled = showCopy,
                    backdrop = backdrop
                ) {

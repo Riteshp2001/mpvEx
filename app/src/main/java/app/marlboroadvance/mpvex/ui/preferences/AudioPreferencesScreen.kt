@@ -27,12 +27,14 @@ import app.marlboroadvance.mpvex.preferences.AudioChannels
 import app.marlboroadvance.mpvex.preferences.AudioPreferences
 import app.marlboroadvance.mpvex.preferences.preference.collectAsState
 import app.marlboroadvance.mpvex.presentation.Screen
+import app.marlboroadvance.mpvex.ui.liquidglass.backdrops.layerBackdrop
+import app.marlboroadvance.mpvex.ui.liquidglass.backdrops.rememberLayerBackdrop
+import app.marlboroadvance.mpvex.ui.preferences.components.LiquidSwitchPreference
 import app.marlboroadvance.mpvex.ui.utils.LocalBackStack
 import kotlinx.serialization.Serializable
 import me.zhanghai.compose.preference.ListPreference
 import me.zhanghai.compose.preference.ProvidePreferenceLocals
 import me.zhanghai.compose.preference.SliderPreference
-import me.zhanghai.compose.preference.SwitchPreference
 import me.zhanghai.compose.preference.TextFieldPreference
 import org.koin.compose.koinInject
 
@@ -81,109 +83,112 @@ object AudioPreferencesScreen : Screen {
           
           item {
             PreferenceCard {
-          val preferredLanguages by preferences.preferredLanguages.collectAsState()
-          TextFieldPreference(
-            value = preferredLanguages,
-            onValueChange = { preferences.preferredLanguages.set(it) },
-            textToValue = { it },
-            title = { Text(stringResource(R.string.pref_preferred_languages)) },
-            summary = {
-                if (preferredLanguages.isNotBlank()) {
-                  Text(
-                    preferredLanguages,
-                    color = MaterialTheme.colorScheme.outline,
-                  )
-                } else {
-                  Text(
-                    stringResource(R.string.not_set_video_default),
-                    color = MaterialTheme.colorScheme.outline,
-                  )
-                }
-              },
-            textField = { value, onValueChange, _ ->
-              Column {
-                Text(stringResource(R.string.pref_audio_preferred_language))
-                TextField(
-                  value,
-                  onValueChange,
-                  modifier = Modifier.fillMaxWidth(),
-                )
-              }
-            },
-          )
-          
-          PreferenceDivider()
-          val audioPitchCorrection by preferences.audioPitchCorrection.collectAsState()
-          SwitchPreference(
-            value = audioPitchCorrection,
-            onValueChange = { preferences.audioPitchCorrection.set(it) },
-            title = { Text(stringResource(R.string.pref_audio_pitch_correction_title)) },
-            summary = { 
-              Text(
-                stringResource(R.string.pref_audio_pitch_correction_summary),
-                color = MaterialTheme.colorScheme.outline,
-              ) 
-            },
-          )
-          
-          PreferenceDivider()
-          val volumeNormalization by preferences.volumeNormalization.collectAsState()
-          SwitchPreference(
-            value = volumeNormalization,
-            onValueChange = { preferences.volumeNormalization.set(it) },
-            title = { Text(stringResource(R.string.pref_audio_volume_normalization_title)) },
-            summary = { 
-              Text(
-                stringResource(R.string.pref_audio_volume_normalization_summary),
-                color = MaterialTheme.colorScheme.outline,
-              ) 
-            },
-          )
-          
-          PreferenceDivider()
-          val automaticBackgroundPlayback by preferences.automaticBackgroundPlayback.collectAsState()
-          SwitchPreference(
-            value = automaticBackgroundPlayback,
-            onValueChange = { preferences.automaticBackgroundPlayback.set(it) },
-            title = { Text(stringResource(R.string.background_playback_title)) },
-          )
-          
-          PreferenceDivider()
-          val audioChannel by preferences.audioChannels.collectAsState()
-          ListPreference(
-            value = audioChannel,
-            onValueChange = { preferences.audioChannels.set(it) },
-            values = AudioChannels.entries,
-            valueToText = { AnnotatedString(context.getString(it.title)) },
-            title = { Text(text = stringResource(id = R.string.pref_audio_channels)) },
-            summary = { 
-              Text(
-                text = context.getString(audioChannel.title),
-                color = MaterialTheme.colorScheme.outline,
-              ) 
-            },
-          )
-          
-          PreferenceDivider()
-          val volumeBoostCap by preferences.volumeBoostCap.collectAsState()
-          SliderPreference(
-            value = volumeBoostCap.toFloat(),
-            onValueChange = { preferences.volumeBoostCap.set(it.toInt()) },
-            title = { Text(stringResource(R.string.pref_audio_volume_boost_cap)) },
-            valueRange = 0f..200f,
-            summary = {
-              Text(
-                if (volumeBoostCap == 0) {
-                  stringResource(R.string.generic_disabled)
-                } else {
-                  volumeBoostCap.toString()
+              val preferredLanguages by preferences.preferredLanguages.collectAsState()
+              TextFieldPreference(
+                value = preferredLanguages,
+                onValueChange = { preferences.preferredLanguages.set(it) },
+                textToValue = { it },
+                title = { Text(stringResource(R.string.pref_preferred_languages)) },
+                summary = {
+                    if (preferredLanguages.isNotBlank()) {
+                      Text(
+                        preferredLanguages,
+                        color = MaterialTheme.colorScheme.outline,
+                      )
+                    } else {
+                      Text(
+                        stringResource(R.string.not_set_video_default),
+                        color = MaterialTheme.colorScheme.outline,
+                      )
+                    }
+                  },
+                textField = { value, onValueChange, _ ->
+                  Column {
+                    Text(stringResource(R.string.pref_audio_preferred_language))
+                    TextField(
+                      value,
+                      onValueChange,
+                      modifier = Modifier.fillMaxWidth(),
+                    )
+                  }
                 },
-                color = MaterialTheme.colorScheme.outline,
               )
-            },
-            onSliderValueChange = { preferences.volumeBoostCap.set(it.toInt()) },
-            sliderValue = volumeBoostCap.toFloat(),
-          )
+              
+              PreferenceDivider()
+              val audioPitchCorrection by preferences.audioPitchCorrection.collectAsState()
+              LiquidSwitchPreference(
+                value = audioPitchCorrection,
+                onValueChange = { preferences.audioPitchCorrection.set(it) },
+                title = { Text(stringResource(R.string.pref_audio_pitch_correction_title)) },
+                summary = { 
+                  Text(
+                    stringResource(R.string.pref_audio_pitch_correction_summary),
+                    color = MaterialTheme.colorScheme.outline,
+                  ) 
+                },
+                backdrop = null
+              )
+              
+              PreferenceDivider()
+              val volumeNormalization by preferences.volumeNormalization.collectAsState()
+              LiquidSwitchPreference(
+                value = volumeNormalization,
+                onValueChange = { preferences.volumeNormalization.set(it) },
+                title = { Text(stringResource(R.string.pref_audio_volume_normalization_title)) },
+                summary = { 
+                  Text(
+                    stringResource(R.string.pref_audio_volume_normalization_summary),
+                    color = MaterialTheme.colorScheme.outline,
+                  ) 
+                },
+                backdrop = null
+              )
+              
+              PreferenceDivider()
+              val automaticBackgroundPlayback by preferences.automaticBackgroundPlayback.collectAsState()
+              LiquidSwitchPreference(
+                value = automaticBackgroundPlayback,
+                onValueChange = { preferences.automaticBackgroundPlayback.set(it) },
+                title = { Text(stringResource(R.string.background_playback_title)) },
+                backdrop = null
+              )
+              
+              PreferenceDivider()
+              val audioChannel by preferences.audioChannels.collectAsState()
+              ListPreference(
+                value = audioChannel,
+                onValueChange = { preferences.audioChannels.set(it) },
+                values = AudioChannels.entries,
+                valueToText = { AnnotatedString(context.getString(it.title)) },
+                title = { Text(text = stringResource(id = R.string.pref_audio_channels)) },
+                summary = { 
+                  Text(
+                    text = context.getString(audioChannel.title),
+                    color = MaterialTheme.colorScheme.outline,
+                  ) 
+                },
+              )
+              
+              PreferenceDivider()
+              val volumeBoostCap by preferences.volumeBoostCap.collectAsState()
+              SliderPreference(
+                value = volumeBoostCap.toFloat(),
+                onValueChange = { preferences.volumeBoostCap.set(it.toInt()) },
+                title = { Text(stringResource(R.string.pref_audio_volume_boost_cap)) },
+                valueRange = 0f..200f,
+                summary = {
+                  Text(
+                    if (volumeBoostCap == 0) {
+                      stringResource(R.string.generic_disabled)
+                    } else {
+                      volumeBoostCap.toString()
+                    },
+                    color = MaterialTheme.colorScheme.outline,
+                  )
+                },
+                onSliderValueChange = { preferences.volumeBoostCap.set(it.toInt()) },
+                sliderValue = volumeBoostCap.toFloat(),
+              )
             }
           }
         }

@@ -937,15 +937,9 @@ fun LiquidSlider(
     modifier: Modifier = Modifier
 ) {
     val isLightTheme = !isSystemInDarkTheme()
-    val accentColor =
-        if (isLightTheme) Color(0xFF0088FF)
-        else Color(0xFF0091FF)
-    val trackColor =
-        if (isLightTheme) Color(0xFF787878).copy(0.2f)
-        else Color(0xFF787880).copy(0.36f)
-    val bufferColor =
-        if (isLightTheme) Color(0xFF787878).copy(0.4f)
-        else Color(0xFF787880).copy(0.5f)
+    val accentColor = MaterialTheme.colorScheme.primary
+    val trackColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+    val bufferColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.4f)
 
     val trackBackdrop = rememberLayerBackdrop()
 
@@ -1148,6 +1142,8 @@ fun LiquidSlider(
                         scaleY *= 1f - (velocity * 0.25f).fastCoerceIn(-0.2f, 0.2f)
                     },
                     onDrawSurface = {
+                        // Total white only in shrink state (progress 0)
+                        // Fades out as it expands/presses
                         val progress = dampedDragAnimation.pressProgress
                         drawRect(Color.White.copy(alpha = 1f - progress))
                     }

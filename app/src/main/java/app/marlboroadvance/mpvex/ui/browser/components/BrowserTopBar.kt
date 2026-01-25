@@ -55,6 +55,17 @@ import app.marlboroadvance.mpvex.preferences.AppearancePreferences
 import app.marlboroadvance.mpvex.preferences.preference.collectAsState
 import app.marlboroadvance.mpvex.ui.theme.DarkMode
 import app.marlboroadvance.mpvex.ui.theme.LocalThemeTransitionState
+import app.marlboroadvance.mpvex.preferences.AdvancedPreferences
+import app.marlboroadvance.mpvex.ui.liquidglass.backdrops.rememberLayerBackdrop
+import app.marlboroadvance.mpvex.ui.liquidglass.drawBackdrop
+import app.marlboroadvance.mpvex.ui.liquidglass.effects.blur
+import app.marlboroadvance.mpvex.ui.liquidglass.effects.lens
+import app.marlboroadvance.mpvex.ui.liquidglass.effects.vibrancy
+import app.marlboroadvance.mpvex.ui.liquidglass.highlight.Highlight
+import app.marlboroadvance.mpvex.ui.liquidglass.shadow.Shadow
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.shape.RoundedCornerShape
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -300,7 +311,30 @@ private fun SelectionTopBar(
   modifier: Modifier = Modifier,
   useRemoveIcon: Boolean = false,
 ) {
+  val advancedPreferences = koinInject<AdvancedPreferences>()
+  val enableLiquidGlass by advancedPreferences.enableLiquidGlass.collectAsState()
   var showDropdown by remember { mutableStateOf(false) }
+
+  val surfaceColor = MaterialTheme.colorScheme.surface
+  val topBarModifier = if (enableLiquidGlass) {
+      val backdrop = rememberLayerBackdrop()
+      Modifier.drawBackdrop(
+          backdrop = backdrop,
+          shape = { RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp) },
+          effects = {
+              vibrancy()
+              blur(12.dp.toPx())
+              lens(8.dp.toPx(), 8.dp.toPx())
+          },
+          highlight = { Highlight.Default.copy(alpha = 0.2f) },
+          shadow = { Shadow(radius = 12.dp, alpha = 0.15f) },
+          onDrawSurface = {
+              drawRect(surfaceColor.copy(alpha = 0.2f))
+          }
+      )
+  } else {
+      Modifier
+  }
 
   TopAppBar(
     title = {
@@ -472,6 +506,14 @@ private fun SelectionTopBar(
         }
       }
     },
-    modifier = modifier,
+    colors = if (enableLiquidGlass) {
+        TopAppBarDefaults.topAppBarColors(
+            containerColor = Color.Transparent,
+            scrolledContainerColor = Color.Transparent
+        )
+    } else {
+        TopAppBarDefaults.topAppBarColors()
+    },
+    modifier = modifier.then(topBarModifier),
   )
 }
