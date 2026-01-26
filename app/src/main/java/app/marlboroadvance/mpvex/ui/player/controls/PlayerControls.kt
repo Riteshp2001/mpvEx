@@ -98,7 +98,11 @@ import app.marlboroadvance.mpvex.ui.player.controls.components.ControlsButton
 import app.marlboroadvance.mpvex.ui.player.controls.components.MultipleSpeedPlayerUpdate
 import app.marlboroadvance.mpvex.ui.player.controls.components.SeekbarWithTimers
 import app.marlboroadvance.mpvex.ui.player.controls.components.SpeedControlSlider
+import app.marlboroadvance.mpvex.ui.player.controls.components.SeekTimerUpdate
+import app.marlboroadvance.mpvex.ui.player.controls.components.SeekTimerUpdate
+import app.marlboroadvance.mpvex.ui.player.controls.components.SpeedControlSlider
 import app.marlboroadvance.mpvex.ui.player.controls.components.TextPlayerUpdate
+import app.marlboroadvance.mpvex.ui.player.controls.components.ZoomUpdate
 import app.marlboroadvance.mpvex.ui.player.controls.components.VolumeSlider
 import app.marlboroadvance.mpvex.ui.player.controls.components.sheets.toFixed
 import app.marlboroadvance.mpvex.ui.theme.controlColor
@@ -459,12 +463,12 @@ fun PlayerControls(
 
             is PlayerUpdates.VideoZoom -> {
               val zoomPercentage = (videoZoom * 100).toInt()
-              TextPlayerUpdate("Zoom: $zoomPercentage%")
+              ZoomUpdate(zoomPercentage)
             }
 
             is PlayerUpdates.HorizontalSeek -> {
               val seekUpdate = currentPlayerUpdate as PlayerUpdates.HorizontalSeek
-              TextPlayerUpdate("${seekUpdate.currentTime} [ ${seekUpdate.seekDelta} ]")
+              SeekTimerUpdate(seekUpdate.currentTime, seekUpdate.seekDelta)
             }
 
             is PlayerUpdates.RepeatMode -> {

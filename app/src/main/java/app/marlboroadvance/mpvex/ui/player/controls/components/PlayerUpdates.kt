@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DoubleArrow
 import androidx.compose.material3.Icon
@@ -20,7 +22,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import app.marlboroadvance.mpvex.R
@@ -61,7 +65,78 @@ fun TextPlayerUpdate(
   modifier: Modifier = Modifier,
 ) {
   PlayerUpdate(modifier) {
-    Text(text)
+    Text(text, textAlign = TextAlign.Center)
+  }
+}
+
+@Composable
+fun ZoomUpdate(
+  zoom: Int,
+  modifier: Modifier = Modifier,
+) {
+  PlayerUpdate(modifier) {
+    Row(
+      horizontalArrangement = Arrangement.Center,
+      verticalAlignment = Alignment.CenterVertically,
+    ) {
+      Text(
+        text = "Zoom :", 
+        textAlign = TextAlign.Center,
+        fontWeight = FontWeight.Bold,
+        fontFamily = FontFamily.Monospace,
+      )
+      androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(4.dp))
+      Box(
+        modifier = Modifier.width(56.dp),
+        contentAlignment = Alignment.Center,
+      ) {
+        Text(
+          text = "$zoom%", 
+          textAlign = TextAlign.Center,
+          fontWeight = FontWeight.Bold,
+          fontFamily = FontFamily.Monospace,
+        )
+      }
+    }
+  }
+}
+
+@Composable
+fun SeekTimerUpdate(
+  currentTime: String,
+  seekDelta: String,
+  modifier: Modifier = Modifier,
+) {
+  PlayerUpdate(modifier) {
+    Row(
+      horizontalArrangement = Arrangement.Center,
+      verticalAlignment = Alignment.CenterVertically,
+    ) {
+      Box(
+        modifier = Modifier.width(70.dp),
+        contentAlignment = Alignment.Center,
+      ) {
+        Text(
+          text = currentTime,
+          textAlign = TextAlign.Center,
+          fontWeight = FontWeight.Bold,
+          fontFamily = FontFamily.Monospace,
+        )
+      }
+      androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(4.dp))
+      Box(
+         modifier = Modifier.width(80.dp),
+         contentAlignment = Alignment.Center,
+      ) {
+        Text(
+          text = "[$seekDelta]",
+          textAlign = TextAlign.Center,
+          fontWeight = FontWeight.Bold,
+          fontFamily = FontFamily.Monospace,
+          color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+        )
+      }
+    }
   }
 }
 
