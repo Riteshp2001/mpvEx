@@ -83,8 +83,6 @@ coil-core = { module = "io.coil-kt.coil3:coil", version.ref = "coil" }
 whisperkit = { module = "com.argmaxinc:whisperkit", version.ref = "whisperkit" }
 qnn-runtime = { module = "com.qualcomm.qti:qnn-runtime", version.ref = "qnn" }
 qnn-litert-delegate = { module = "com.qualcomm.qti:qnn-litert-delegate", version.ref = "qnn" }
-ffmpeg-kit = { module = "com.arthenica:ffmpeg-kit-full", version = "4.5.1-1.LTS" }
-
 
 [bundles]
 koin = ["koin-core", "koin-android", "koin-compose", "koin-viewmodel"]

@@ -119,6 +119,13 @@ android {
     }
     jniLibs {
       useLegacyPackaging = true
+      pickFirsts += "lib/**/libavcodec.so"
+      pickFirsts += "lib/**/libavutil.so"
+      pickFirsts += "lib/**/libswresample.so"
+      pickFirsts += "lib/**/libavformat.so"
+      pickFirsts += "lib/**/libswscale.so"
+      pickFirsts += "lib/**/libavfilter.so"
+      pickFirsts += "lib/**/libavdevice.so"
     }
   }
 
@@ -221,7 +228,6 @@ dependencies {
   implementation(libs.whisperkit)
   implementation(libs.qnn.runtime)
   implementation(libs.qnn.litert.delegate)
-  implementation(libs.ffmpeg.kit)
   implementation(libs.androidx.work.runtime.ktx)
 }
 

@@ -11,8 +11,8 @@ import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.argmaxinc.whisperkit.android.WhisperKit
-import com.arthenica.ffmpegkit.FFmpegKit
-import com.arthenica.ffmpegkit.ReturnCode
+// import com.arthenica.ffmpegkit.FFmpegKit
+// import com.arthenica.ffmpegkit.ReturnCode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -52,11 +52,12 @@ class SubtitleWorker(
         try {
             // 1. Extract Audio
             updateProgress("Extracting audio...", 0)
-            val ffmpegCommand = "-i \"$videoPath\" -ar 16000 -ac 1 -c:a pcm_s16le \"${audioFile.absolutePath}\""
-            val session = FFmpegKit.execute(ffmpegCommand)
+            val success = withContext(Dispatchers.IO) {
+                AudioExtractor.extractToWav(videoPath, audioFile)
+            }
             
-            if (!ReturnCode.isSuccess(session.returnCode)) {
-                throw Exception("FFmpeg extraction failed: ${session.failStackTrace}")
+            if (!success) {
+                throw Exception("Audio extraction failed using system APIs")
             }
 
             // 2. Initialize WhisperKit
