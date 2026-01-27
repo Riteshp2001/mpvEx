@@ -642,6 +642,29 @@ object AdvancedPreferencesScreen : Screen {
             }
           }
           
+          // Experimental Features
+          item {
+            PreferenceSectionHeader(title = "Experimental Features")
+          }
+
+          item {
+             PreferenceCard {
+                val experimentalMode by preferences.experimentalMode.collectAsState()
+                
+                SwitchPreference(
+                   value = experimentalMode,
+                   onValueChange = preferences.experimentalMode::set,
+                   title = { Text("Enable Experimental Mode") },
+                   summary = {
+                      Text(
+                         "Enables experimental features like Auto Subtitle Generation. Use with caution.",
+                         color = MaterialTheme.colorScheme.outline,
+                      )
+                   },
+                )
+             }
+          }
+
           // Logging Section
           item {
             PreferenceSectionHeader(title = "Logging")

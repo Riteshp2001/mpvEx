@@ -17,6 +17,7 @@ import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DriveFileRenameOutline
+import androidx.compose.material.icons.filled.Subtitles
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
@@ -40,12 +41,14 @@ fun BrowserBottomBar(
   onRenameClick: () -> Unit,
   onDeleteClick: () -> Unit,
   onAddToPlaylistClick: () -> Unit,
+  onAutoSubtitleClick: () -> Unit,
   modifier: Modifier = Modifier,
   showCopy: Boolean = true,
   showMove: Boolean = true,
   showRename: Boolean = true,
   showDelete: Boolean = true,
   showAddToPlaylist: Boolean = true,
+  showAutoSubtitle: Boolean = false,
 ) {
   AnimatedVisibility(
     visible = isSelectionMode,
@@ -116,6 +119,21 @@ fun BrowserBottomBar(
             contentDescription = "Add to Playlist",
             modifier = Modifier.size(24.dp)
           )
+        }
+        
+        if (showAutoSubtitle) {
+          FilledTonalIconButton(
+            onClick = onAutoSubtitleClick,
+            enabled = true,
+            modifier = Modifier.size(50.dp),
+            colors = IconButtonDefaults.filledTonalIconButtonColors()
+          ) {
+            Icon(
+              Icons.Filled.Subtitles, 
+              contentDescription = "Auto Subtitle",
+              modifier = Modifier.size(24.dp)
+            )
+          }
         }
         
         FilledTonalIconButton(

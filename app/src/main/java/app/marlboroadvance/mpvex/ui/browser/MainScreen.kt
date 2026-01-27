@@ -29,6 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -215,6 +216,23 @@ object MainScreen : Screen {
       }
     ) { paddingValues ->
       Box(modifier = Modifier.fillMaxSize()) {
+        // Global Progress Indicator for Auto Subtitle
+        val advancedPreferences = org.koin.compose.koinInject<app.marlboroadvance.mpvex.preferences.AdvancedPreferences>()
+        val experimentalMode by advancedPreferences.experimentalMode.collectAsState(initial = false)
+        
+        if (experimentalMode) {
+             val autoSubtitleManager = org.koin.compose.koinInject<app.marlboroadvance.mpvex.domain.subtitle.AutoSubtitleManager>()
+             val currentJob by autoSubtitleManager.currentJob.collectAsState()
+             
+             if (currentJob != null && currentJob?.status != app.marlboroadvance.mpvex.domain.subtitle.JobStatus.Pending) {
+                app.marlboroadvance.mpvex.ui.browser.components.GlobalProgressIndicator(
+                    job = currentJob!!,
+                    modifier = Modifier.align(androidx.compose.ui.Alignment.TopCenter)
+                        .androidx.compose.foundation.layout.padding(top = 16.dp)
+                )
+             }
+        }
+
         // Always use 80dp bottom padding regardless of navigation bar visibility
         val fabBottomPadding = 80.dp
 

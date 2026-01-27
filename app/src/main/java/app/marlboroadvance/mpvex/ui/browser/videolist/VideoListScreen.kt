@@ -75,6 +75,7 @@ import app.marlboroadvance.mpvex.preferences.MediaLayoutMode
 import app.marlboroadvance.mpvex.preferences.PlayerPreferences
 import app.marlboroadvance.mpvex.preferences.SortOrder
 import app.marlboroadvance.mpvex.preferences.VideoSortType
+import app.marlboroadvance.mpvex.preferences.AdvancedPreferences
 import app.marlboroadvance.mpvex.preferences.preference.collectAsState
 import app.marlboroadvance.mpvex.presentation.Screen
 import app.marlboroadvance.mpvex.presentation.components.pullrefresh.PullRefreshBox
@@ -123,6 +124,8 @@ data class VideoListScreen(
     val backstack = LocalBackStack.current
     val browserPreferences = koinInject<BrowserPreferences>()
     val playerPreferences = koinInject<PlayerPreferences>()
+    val advancedPreferences = koinInject<AdvancedPreferences>()
+    val autoSubtitleManager = koinInject<app.marlboroadvance.mpvex.domain.subtitle.AutoSubtitleManager>()
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
     val navigationBarHeight = app.marlboroadvance.mpvex.ui.browser.LocalNavigationBarHeight.current
 
@@ -138,6 +141,7 @@ data class VideoListScreen(
     val recentlyPlayedFilePath by viewModel.recentlyPlayedFilePath.collectAsState()
     val playlistMode by playerPreferences.playlistMode.collectAsState()
     val videosWereDeletedOrMoved by viewModel.videosWereDeletedOrMoved.collectAsState()
+    val experimentalMode by advancedPreferences.experimentalMode.collectAsState()
 
     // Sorting
     val videoSortType by browserPreferences.videoSortType.collectAsState()
@@ -350,7 +354,16 @@ data class VideoListScreen(
             onRenameClick = { renameDialogOpen.value = true },
             onDeleteClick = { deleteDialogOpen.value = true },
             onAddToPlaylistClick = { addToPlaylistDialogOpen.value = true },
-            showRename = selectionManager.isSingleSelection
+            showRename = selectionManager.isSingleSelection,
+            showAutoSubtitle = experimentalMode,
+            onAutoSubtitleClick = {
+               val selectedVideos = selectionManager.getSelectedItems()
+               selectedVideos.forEach { video ->
+                  autoSubtitleManager.addToQueue(video.uri, video.path)
+               }
+               selectionManager.clear()
+               android.widget.Toast.makeText(context, "Added ${selectedVideos.size} video(s) to subtitle queue", android.widget.Toast.LENGTH_SHORT).show()
+            }
           )
         }
       }

@@ -216,6 +216,13 @@ dependencies {
 
   implementation(libs.coil.core)
   implementation(libs.coil.compose)
+
+  // Auto Subtitle Generation
+  implementation(libs.whisperkit)
+  implementation(libs.qnn.runtime)
+  implementation(libs.qnn.litert.delegate)
+  implementation(libs.ffmpeg.kit)
+  implementation(libs.androidx.work.runtime.ktx)
 }
 
 fun getCommitCount(): String = runCommand("git rev-list --count HEAD") ?: "0"

@@ -6,4 +6,5 @@ import org.koin.android.ext.koin.androidContext
 
 val domainModule = module {
     single { Anime4KManager(androidContext()) }
+    single { app.marlboroadvance.mpvex.domain.subtitle.AutoSubtitleManager(androidContext(), kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main)) }
 }
