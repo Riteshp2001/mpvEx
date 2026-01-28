@@ -17,10 +17,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
@@ -45,6 +48,7 @@ fun ControlsButton(
   val interactionSource = remember { MutableInteractionSource() }
   val appearancePreferences = koinInject<AppearancePreferences>()
   val hideBackground by appearancePreferences.hidePlayerButtonsBackground.collectAsState()
+  var isFocused by remember { mutableStateOf(false) }
 
   val clickEvent = LocalPlayerButtonsClickEvent.current
   Surface(
@@ -59,7 +63,8 @@ fun ControlsButton(
           onLongClick = onLongClick,
           interactionSource = interactionSource,
           indication = ripple(),
-        ),
+        )
+        .onFocusChanged { isFocused = it.isFocused },
     shape = CircleShape,
     color = if (hideBackground) Color.Transparent else MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.55f),
     contentColor = color ?: MaterialTheme.colorScheme.onSurface,
@@ -67,11 +72,15 @@ fun ControlsButton(
     shadowElevation = 0.dp,
     border =
       if (hideBackground) {
-        null
+        if (isFocused) {
+          BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+        } else {
+          null
+        }
       } else {
         BorderStroke(
-          1.dp,
-          MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+          if (isFocused) 2.dp else 1.dp,
+          if (isFocused) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
         )
       },
   ) {

@@ -549,6 +549,43 @@ class PlayerActivity :
     }
   }
 
+  override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+    // Handle D-pad events for TV navigation
+    if (event.action == KeyEvent.ACTION_DOWN) {
+      when (event.keyCode) {
+        KeyEvent.KEYCODE_DPAD_CENTER,
+        KeyEvent.KEYCODE_ENTER,
+        KeyEvent.KEYCODE_DPAD_UP,
+        KeyEvent.KEYCODE_DPAD_DOWN,
+        KeyEvent.KEYCODE_DPAD_LEFT,
+        KeyEvent.KEYCODE_DPAD_RIGHT -> {
+          // If controls are hidden, show them and consume the event
+          if (!viewModel.controlsShown.value && !viewModel.areControlsLocked.value) {
+            viewModel.showControls()
+            return true
+          }
+          // If controls are shown, let the focus system handle navigation
+          // prevent double tap seek when using dpad
+          if ((event.keyCode == KeyEvent.KEYCODE_DPAD_LEFT || event.keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) && viewModel.controlsShown.value) {
+               // Let default focus handling work
+          } else if (!viewModel.controlsShown.value) {
+               // D-pad left/right for seeking when controls are hidden is handled by MPVLib via input.conf usually,
+               // but here we might want to intercept.
+               // For now, let's stick to showing controls on any D-pad press if they are hidden.
+          }
+        }
+        KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE,
+        KeyEvent.KEYCODE_MEDIA_PLAY,
+        KeyEvent.KEYCODE_MEDIA_PAUSE -> {
+          viewModel.pauseUnpause()
+          viewModel.showControls()
+          return true
+        }
+      }
+    }
+    return super.dispatchKeyEvent(event)
+  }
+
   @RequiresApi(Build.VERSION_CODES.P)
   override fun onDestroy() {
     Log.d(TAG, "PlayerActivity onDestroy")
